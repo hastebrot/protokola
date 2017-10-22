@@ -3,7 +3,7 @@ val junitJupiterVersion by project
 val junitPlatformVersion by project
 
 plugins {
-    kotlin("jvm", "1.1.4-3")
+    kotlin("jvm") version "1.1.51"
 }
 
 repositories {
