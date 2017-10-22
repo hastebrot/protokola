@@ -27,10 +27,12 @@ class ProtokolaTest {
     @Test
     fun `should generate message`() {
         // given:
-        val message = Message(listOf(prop("name"), value("bar"), prop("age"), value(45)))
+        val message = Messages(mapOf("list" to listOf(
+                prop("name"), value("bar"), prop("age"), value(45)
+        )))
 
         // expect:
-        assertEquals(listOf("name", "bar", "age", 45), message.data)
+        assertEquals(listOf("name", "bar", "age", 45), message.data["list"])
     }
 
     @Test

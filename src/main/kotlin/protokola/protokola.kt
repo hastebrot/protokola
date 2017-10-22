@@ -5,7 +5,7 @@ class Protokola {
 }
 
 class Resource(val name: String) {
-    fun messages(): Sequence<Message> = emptySequence()
+    fun messages(): Sequence<Messages> = emptySequence()
 }
 
-data class Message(val data: List<Any>)
+data class Messages(val data: Map<String, Any>)
