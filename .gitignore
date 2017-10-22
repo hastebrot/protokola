@@ -8,3 +8,6 @@ out/
 *.iml
 *.ipr
 *.iws
+
+# apple macos.
+*.DS_Store

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="250.00002"
+   height="250.00002"
+   viewBox="0 0 66.145839 66.145839"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="protologo.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.1319998"
+     inkscape:cx="125.31929"
+     inkscape:cy="125.00001"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1680"
+     inkscape:window-height="960"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     inkscape:pagecheckerboard="true" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-41.783901,2.4523205)">
+    <path
+       sodipodi:type="star"
+       id="path26"
+       sodipodi:sides="16"
+       sodipodi:cx="74.856819"
+       sodipodi:cy="30.620598"
+       sodipodi:r1="32.337769"
+       sodipodi:r2="31.71641"
+       sodipodi:arg1="-2.2469537"
+       sodipodi:arg2="-2.0506042"
+       inkscape:flatsided="true"
+       inkscape:rounded="0.8"
+       inkscape:randomized="0"
+       d="m 54.619828,5.397682 c 7.873195,-6.31686565 1.501598,-3.0012993 11.192842,-5.82438091 9.691243,-2.82308169 2.535843,-2.19820239 12.569731,-1.09771139 10.033888,1.1004909 3.184029,-1.0604491 12.032993,3.7960746 8.848964,4.8565238 3.347475,0.238748 9.664336,8.1119427 6.31687,7.873195 3.0013,1.501598 5.82439,11.192841 2.82308,9.691244 2.1982,2.535843 1.09771,12.569731 -1.10049,10.033888 1.06045,3.184029 -3.79608,12.032993 -4.856521,8.848965 -0.23875,3.347476 -8.11194,9.664342 -7.873195,6.316865 -1.501598,3.001299 -11.192841,5.824381 -9.691244,2.823081 -2.535843,2.198202 -12.569731,1.097711 C 61.29735,61.665115 68.147209,63.826055 59.298245,58.969531 50.44928,54.113008 55.950769,58.730783 49.633903,50.857589 43.317038,42.984394 46.632604,49.355991 43.809522,39.664747 40.986441,29.973504 41.61132,37.128904 42.711811,27.095016 43.812302,17.061128 41.651362,23.910987 46.507886,15.062023 51.364409,6.2130591 46.746634,11.714548 54.619828,5.397682 Z"
+       inkscape:transform-center-x="9.1780734e-06"
+       style="stroke-width:0.54272777;fill:#a00000;fill-opacity:1"
+       inkscape:transform-center-y="-3.6952941e-06" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:24.91250229px;line-height:22.08908463px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.62281251"
+       x="73.581802"
+       y="24.756554"
+       id="text30"><tspan
+         sodipodi:role="line"
+         x="73.581802"
+         y="24.756554"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:22.08908463px;font-family:'Loki Cola';-inkscape-font-specification:'Loki Cola';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.62281251"
+         id="tspan32">Proto</tspan><tspan
+         sodipodi:role="line"
+         x="73.581802"
+         y="48.841244"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:22.08908463px;font-family:'Loki Cola';-inkscape-font-specification:'Loki Cola';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.62281251"
+         id="tspan4531">Kola</tspan></text>
+  </g>
+</svg>
