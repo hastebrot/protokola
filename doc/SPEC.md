@@ -4,13 +4,32 @@
 
 - v0.1 / 2017-10-23 (Benjamin Gudehus, Early Draft)
 
+**Table of Contents:**
+
+<!-- TOC depthFrom:2 orderedList:true -->
+
+1. [About](#about)
+2. [Commands and Notifications](#commands-and-notifications)
+    1. [CreateContext](#createcontext)
+    2. [DestroyContext](#destroycontext)
+    3. [CreateController](#createcontroller)
+    4. [DestroyController](#destroycontroller)
+    5. [CreatePresentationalModel](#createpresentationalmodel)
+    6. [DestroyPresentationalModelCommand](#destroypresentationalmodelcommand)
+    7. [ValueChanged](#valuechanged)
+    8. [CallAction](#callaction)
+    9. [StartLongPoll](#startlongpoll)
+    10. [InterruptLongPoll](#interruptlongpoll)
+
+<!-- /TOC -->
+
 ## About
 
-This is an unofficial specification for Dolphin Platform. It documents the structures that are transmitted and received.
+This is an internal specification for Dolphin Platform. It documents the structures that are transmitted and received.
 
 ## Commands and Notifications
 
-**CreateContext:**
+### CreateContext
 
 Seen as request.
 
@@ -20,11 +39,11 @@ Seen as request.
 }
 ~~~
 
-**DestroyContext:**
+### DestroyContext
 
 _TBD_.
 
-**CreateController:**
+### CreateController
 
 Seen as request.
 
@@ -36,7 +55,7 @@ Seen as request.
 }
 ~~~
 
-**DestroyController:**
+### DestroyController
 
 Seen as request.
 
@@ -47,7 +66,7 @@ Seen as request.
 }
 ~~~
 
-**CreatePresentationalModel:**
+### CreatePresentationalModel
 
 Seen as request and response.
 
@@ -64,7 +83,7 @@ Seen as request and response.
 }
 ~~~
 
-**DestroyPresentationalModelCommand:**
+### DestroyPresentationalModelCommand
 
 Seen as response.
 
@@ -75,7 +94,7 @@ Seen as response.
 }
 ~~~
 
-**ValueChanged:**
+### ValueChanged
 
 Seen as response.
 
@@ -87,11 +106,11 @@ Seen as response.
 }
 ~~~
 
-**CallAction:**
+### CallAction
 
 _TDB_.
 
-**StartLongPoll:**
+### StartLongPoll
 
 Seen as request.
 
@@ -101,7 +120,7 @@ Seen as request.
 }
 ~~~
 
-**InterruptLongPoll:**
+### InterruptLongPoll
 
 Seen as request.
 
