@@ -12,6 +12,9 @@ repositories {
 
 dependencies {
     compile(kotlin("stdlib", "$kotlinVersion"))
+    compile("com.squareup.okhttp3:okhttp:3.9.0")
+    compile("com.squareup.moshi:moshi:1.5.0")
+    compile("com.squareup.moshi:moshi-kotlin:1.5.0")
 }
 
 dependencies {
