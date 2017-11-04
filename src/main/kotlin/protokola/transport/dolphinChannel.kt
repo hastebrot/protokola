@@ -16,6 +16,14 @@ fun main(args: Array<String>) {
     val bus = MessageBus()
     bus.subscribe { println(it.payload) }
 
+    val channel = DolphinChannel(bus)
+    bus.subscribe { message ->
+        @Suppress("UNCHECKED_CAST")
+        when (message.payload) {
+            is Transport.Request -> channel.fetch(message as Message<Transport.Request>)
+        }
+    }
+
     val dolphinEndpointUrl = "http://localhost:8080/dolphin"
 
     val requestContext = Transport.Request(dolphinEndpointUrl, listOf(
@@ -30,10 +38,9 @@ fun main(args: Array<String>) {
         mapOf("id" to "StartLongPoll")
     ).toJson())
 
-    val channel = DolphinChannel(bus)
-    channel.fetch(Message(requestContext))
-    channel.fetch(Message(requestController))
-    channel.fetch(Message(requestLongPoll))
+    bus.dispatch(Message(requestContext))
+    bus.dispatch(Message(requestController))
+    bus.dispatch(Message(requestLongPoll))
 }
 
 object Transport {
@@ -58,8 +65,6 @@ class DolphinChannel(private val bus: MessageBus) {
     private var sessionCookie: Transport.SessionCookie? = null
 
     fun fetch(requestMessage: Message<Transport.Request>) {
-        bus.dispatch(requestMessage)
-
         val request = createOkHttpRequest(
             requestMessage.payload,
             dolphinClientId,
