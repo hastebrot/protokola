@@ -12,6 +12,30 @@ import protokola.Message
 import protokola.MessageBus
 import java.util.concurrent.ConcurrentHashMap
 
+fun main(args: Array<String>) {
+    val bus = MessageBus()
+    bus.subscribe { println(it.payload) }
+
+    val dolphinEndpointUrl = "http://localhost:8080/dolphin"
+
+    val requestContext = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "CreateContext")
+    ).toJson())
+
+    val requestController = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
+    ).toJson())
+
+    val requestLongPoll = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "StartLongPoll")
+    ).toJson())
+
+    val channel = DolphinChannel(bus)
+    channel.fetch(Message(requestContext))
+    channel.fetch(Message(requestController))
+    channel.fetch(Message(requestLongPoll))
+}
+
 object Transport {
     data class Request(val url: String,
                        val body: String)
@@ -24,16 +48,14 @@ object Transport {
     data class SessionCookie(val value: String)
 }
 
-fun main(args: Array<String>) {
-    val bus = MessageBus()
-    bus.subscribe { println(it.payload) }
-
-    val client = OkHttpClient.Builder()
+class DolphinChannel(private val bus: MessageBus) {
+    private val client = OkHttpClient.Builder()
 //        .cookieJar(simpleCookieJar())
         .build()
 
-    var dolphinClientId: Transport.DolphinClientId? = null
-    var sessionCookie: Transport.SessionCookie? = null
+    private var dolphinClientId: Transport.DolphinClientId? = null
+
+    private var sessionCookie: Transport.SessionCookie? = null
 
     fun fetch(requestMessage: Message<Transport.Request>) {
         bus.dispatch(requestMessage)
@@ -64,24 +86,6 @@ fun main(args: Array<String>) {
             }
         }
     }
-
-    val dolphinEndpointUrl = "http://localhost:8080/dolphin"
-
-    val requestContext = Transport.Request(dolphinEndpointUrl, listOf(
-        mapOf("id" to "CreateContext")
-    ).toJson())
-
-    val requestController = Transport.Request(dolphinEndpointUrl, listOf(
-        mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
-    ).toJson())
-
-    val requestLongPoll = Transport.Request(dolphinEndpointUrl, listOf(
-        mapOf("id" to "StartLongPoll")
-    ).toJson())
-
-    fetch(Message(requestContext))
-    fetch(Message(requestController))
-    fetch(Message(requestLongPoll))
 }
 
 private val headerConnectionKey = "Connection"
@@ -90,9 +94,10 @@ private val headerSetCookieKey = "Set-Cookie"
 private val headerDolphinClientId = "dolphin_platform_intern_dolphinClientId"
 
 private fun createOkHttpRequest(
-        request: Transport.Request,
-        dolphinClientId: Transport.DolphinClientId?,
-        sessionCookie: Transport.SessionCookie?): Request {
+    request: Transport.Request,
+    dolphinClientId: Transport.DolphinClientId?,
+    sessionCookie: Transport.SessionCookie?): Request {
+
     val mediaType = MediaType.parse("application/json")
     return Request.Builder().apply {
         url(request.url)
