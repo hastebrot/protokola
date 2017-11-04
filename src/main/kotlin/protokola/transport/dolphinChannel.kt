@@ -12,13 +12,16 @@ import protokola.Message
 import protokola.MessageBus
 import java.util.concurrent.ConcurrentHashMap
 
-sealed class Transport {
+object Transport {
     data class Request(val url: String,
-                       val body: String) : Transport()
+                       val body: String)
+
     data class Response(val status: Int,
-                        val body: String) : Transport()
-    data class DolphinClientId(val value: String) : Transport()
-    data class SessionCookie(val value: String) : Transport()
+                        val body: String)
+
+    data class DolphinClientId(val value: String)
+
+    data class SessionCookie(val value: String)
 }
 
 fun main(args: Array<String>) {
@@ -26,11 +29,11 @@ fun main(args: Array<String>) {
     bus.subscribe { println(it.payload) }
 
     val client = OkHttpClient.Builder()
-//            .cookieJar(simpleCookieJar())
-            .build()
+//        .cookieJar(simpleCookieJar())
+        .build()
 
-    var sessionCookie: Transport.SessionCookie? = null
     var dolphinClientId: Transport.DolphinClientId? = null
+    var sessionCookie: Transport.SessionCookie? = null
 
     fun fetch(requestMessage: Message<Transport.Request>) {
         bus.dispatch(requestMessage)
@@ -47,7 +50,7 @@ fun main(args: Array<String>) {
             val sessionCookieValue = response.headers(headerSetCookieKey).firstOrNull()
 
             val responseMessage = Message(Transport.Response(
-                    response.code(), response.body()!!.string()
+                response.code(), response.body()!!.string()
             ))
             bus.dispatch(responseMessage)
 
@@ -120,5 +123,5 @@ private fun simpleCookieJar() = object : CookieJar {
 }
 
 private fun RequestBody.string() = Buffer()
-        .also { writeTo(it) }
-        .readUtf8()
+    .also { writeTo(it) }
+    .readUtf8()

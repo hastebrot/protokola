@@ -28,5 +28,5 @@
 ## Roadmap for proof of concept
 
 - [x] Implement a store that contains messages.
-- [ ] Implement a channel that fills the store.
-
+- [x] Implement a channel that fills the store.
+- [ ] Implement a codec that reads and writes messages.
