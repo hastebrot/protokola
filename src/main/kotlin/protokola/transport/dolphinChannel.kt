@@ -10,31 +10,29 @@ import okhttp3.RequestBody
 import okio.Buffer
 import protokola.Message
 import protokola.MessageBus
+import protokola.transport.Transport.ClientRequest
+import protokola.transport.Transport.DolphinClientId
+import protokola.transport.Transport.SessionCookie
 import java.util.concurrent.ConcurrentHashMap
 
 fun main(args: Array<String>) {
     val bus = MessageBus()
     bus.subscribe { println(it.payload) }
 
-    val channel = DolphinChannel(bus)
-    bus.subscribe { message ->
-        @Suppress("UNCHECKED_CAST")
-        when (message.payload) {
-            is Transport.Request -> channel.fetch(message as Message<Transport.Request>)
-        }
-    }
+    val channel = DolphinChannel()
+    channel.dispatchTo(bus)
 
     val dolphinEndpointUrl = "http://localhost:8080/dolphin"
 
-    val requestContext = Transport.Request(dolphinEndpointUrl, listOf(
+    val requestContext = ClientRequest(dolphinEndpointUrl, listOf(
         mapOf("id" to "CreateContext")
     ).toJson())
 
-    val requestController = Transport.Request(dolphinEndpointUrl, listOf(
+    val requestController = ClientRequest(dolphinEndpointUrl, listOf(
         mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
     ).toJson())
 
-    val requestLongPoll = Transport.Request(dolphinEndpointUrl, listOf(
+    val requestLongPoll = ClientRequest(dolphinEndpointUrl, listOf(
         mapOf("id" to "StartLongPoll")
     ).toJson())
 
@@ -44,29 +42,39 @@ fun main(args: Array<String>) {
 }
 
 object Transport {
-    data class Request(val url: String,
-                       val body: String)
+    data class ClientRequest(val url: String,
+                             val body: String)
 
-    data class Response(val status: Int,
-                        val body: String)
+    data class ServerResponse(val status: Int,
+                              val body: String)
 
     data class DolphinClientId(val value: String)
 
     data class SessionCookie(val value: String)
 }
 
-class DolphinChannel(private val bus: MessageBus) {
+class DolphinChannel {
     private val client = OkHttpClient.Builder()
 //        .cookieJar(simpleCookieJar())
         .build()
 
-    private var dolphinClientId: Transport.DolphinClientId? = null
+    private var dolphinClientId: DolphinClientId? = null
 
-    private var sessionCookie: Transport.SessionCookie? = null
+    private var sessionCookie: SessionCookie? = null
 
-    fun fetch(requestMessage: Message<Transport.Request>) {
-        val request = createOkHttpRequest(
-            requestMessage.payload,
+    fun dispatchTo(messageBus: MessageBus) {
+        messageBus.subscribe { message ->
+            @Suppress("UNCHECKED_CAST")
+            when (message.payload) {
+                is ClientRequest -> fetch(messageBus, message as Message<ClientRequest>)
+            }
+        }
+    }
+
+    private fun fetch(bus: MessageBus,
+                      clientRequest: Message<ClientRequest>) {
+        val request = createRequest(
+            clientRequest.payload,
             dolphinClientId,
             sessionCookie
         )
@@ -76,17 +84,17 @@ class DolphinChannel(private val bus: MessageBus) {
             val dolphinClientIdValue = response.header(headerDolphinClientId)
             val sessionCookieValue = response.headers(headerSetCookieKey).firstOrNull()
 
-            val responseMessage = Message(Transport.Response(
+            val serverResponse = Message(Transport.ServerResponse(
                 response.code(), response.body()!!.string()
             ))
-            bus.dispatch(responseMessage)
+            bus.dispatch(serverResponse)
 
             dolphinClientIdValue?.let {
-                dolphinClientId = Transport.DolphinClientId(it)
+                dolphinClientId = DolphinClientId(it)
                 bus.dispatch(Message(dolphinClientId))
             }
             sessionCookieValue?.let {
-                sessionCookie = Transport.SessionCookie(it)
+                sessionCookie = SessionCookie(it)
                 bus.dispatch(Message(sessionCookie))
             }
         }
@@ -98,15 +106,15 @@ private val headerCookieKey = "Cookie"
 private val headerSetCookieKey = "Set-Cookie"
 private val headerDolphinClientId = "dolphin_platform_intern_dolphinClientId"
 
-private fun createOkHttpRequest(
-    request: Transport.Request,
-    dolphinClientId: Transport.DolphinClientId?,
-    sessionCookie: Transport.SessionCookie?): Request {
+private fun createRequest(
+    clientRequest: ClientRequest,
+    dolphinClientId: DolphinClientId?,
+    sessionCookie: SessionCookie?): Request {
 
     val mediaType = MediaType.parse("application/json")
     return Request.Builder().apply {
-        url(request.url)
-        post(RequestBody.create(mediaType, request.body))
+        url(clientRequest.url)
+        post(RequestBody.create(mediaType, clientRequest.body))
         header(headerConnectionKey, "keep-alive")
         if (dolphinClientId != null) {
             header(headerDolphinClientId, dolphinClientId.value)
