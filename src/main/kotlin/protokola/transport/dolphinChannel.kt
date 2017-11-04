@@ -8,10 +8,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.Buffer
+import protokola.Message
 import java.util.concurrent.ConcurrentHashMap
 
-data class HttpRequest(val body: String)
-data class HttpResponse(val status: Int, val body: String)
+sealed class Transport {
+    data class Request(val body: String) : Transport()
+    data class Response(val status: Int, val body: String): Transport()
+}
 
 fun main(args: Array<String>) {
     val client = OkHttpClient.Builder()
@@ -20,39 +23,39 @@ fun main(args: Array<String>) {
 
     val dolphinUrl = "http://localhost:8080/dolphin"
 
-    val request1 = HttpRequest(listOf(
+    val request1 = Message(Transport.Request(listOf(
         mapOf("id" to "CreateContext")
-    ).toJson())
+    ).toJson()))
 
-    val request2 = HttpRequest(listOf(
+    val request2 = Message(Transport.Request(listOf(
         mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
-    ).toJson())
+    ).toJson()))
 
-    val request3 = HttpRequest(listOf(
+    val request3 = Message(Transport.Request(listOf(
         mapOf("id" to "StartLongPoll")
-    ).toJson())
+    ).toJson()))
 
     var dolphinClientId: String? = null
     var cookieSessionId: String? = null
 
-    fun fetch(httpRequest: HttpRequest): HttpResponse {
-        val request = makeDolphinRequest(httpRequest.body, dolphinUrl, dolphinClientId, cookieSessionId)
+    fun fetch(requestMessage: Message<Transport.Request>): Message<Transport.Response> {
+        val request = makeDolphinRequest(requestMessage.payload.body, dolphinUrl, dolphinClientId, cookieSessionId)
         val call = client.newCall(request)
         return call.execute().use { response ->
             dolphinClientId = response.header(clientIdKey)
             cookieSessionId = cookieSessionId ?: response.headers(sessionIdKey).firstOrNull()
-            HttpResponse(response.code(), response.body()!!.string())
+            Message(Transport.Response(response.code(), response.body()!!.string()))
         }
     }
 
-    println(request1)
-    println(fetch(request1))
+    println(request1.payload)
+    println(fetch(request1).payload)
 
-    println(request2)
-    println(fetch(request2))
+    println(request2.payload)
+    println(fetch(request2).payload)
 
-    println(request3)
-    println(fetch(request3))
+    println(request3.payload)
+    println(fetch(request3).payload)
 }
 
 private val sessionIdKey = "Set-Cookie"
