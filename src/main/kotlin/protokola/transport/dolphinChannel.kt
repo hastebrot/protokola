@@ -17,8 +17,8 @@ sealed class Transport {
                        val body: String) : Transport()
     data class Response(val status: Int,
                         val body: String) : Transport()
-    data class SessionCookie(val cookie: String) : Transport()
-    data class DolphinClientId(val id: String) : Transport()
+    data class DolphinClientId(val value: String) : Transport()
+    data class SessionCookie(val value: String) : Transport()
 }
 
 fun main(args: Array<String>) {
@@ -29,59 +29,77 @@ fun main(args: Array<String>) {
 //            .cookieJar(simpleCookieJar())
             .build()
 
-    val dolphinUrl = "http://localhost:8080/dolphin"
-
-    val request1 = Message(Transport.Request(dolphinUrl, listOf(
-        mapOf("id" to "CreateContext")
-    ).toJson()))
-
-    val request2 = Message(Transport.Request(dolphinUrl, listOf(
-        mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
-    ).toJson()))
-
-    val request3 = Message(Transport.Request(dolphinUrl, listOf(
-        mapOf("id" to "StartLongPoll")
-    ).toJson()))
-
-    var dolphinClientId: String? = null
-    var cookieSessionId: String? = null
+    var sessionCookie: Transport.SessionCookie? = null
+    var dolphinClientId: Transport.DolphinClientId? = null
 
     fun fetch(requestMessage: Message<Transport.Request>) {
         bus.dispatch(requestMessage)
-        val request = createDolphinRequest(requestMessage.payload.body, requestMessage.payload.url, dolphinClientId, cookieSessionId)
+
+        val request = createOkHttpRequest(
+            requestMessage.payload,
+            dolphinClientId,
+            sessionCookie
+        )
+
         val call = client.newCall(request)
         call.execute().use { response ->
-            dolphinClientId = response.header(clientIdKey)
-            cookieSessionId = cookieSessionId ?: response.headers(setCookieKey).firstOrNull()
-            val responseMessage = Message(Transport.Response(response.code(), response.body()!!.string()))
+            val dolphinClientIdValue = response.header(headerDolphinClientId)
+            val sessionCookieValue = response.headers(headerSetCookieKey).firstOrNull()
+
+            val responseMessage = Message(Transport.Response(
+                    response.code(), response.body()!!.string()
+            ))
             bus.dispatch(responseMessage)
+
+            dolphinClientIdValue?.let {
+                dolphinClientId = Transport.DolphinClientId(it)
+                bus.dispatch(Message(dolphinClientId))
+            }
+            sessionCookieValue?.let {
+                sessionCookie = Transport.SessionCookie(it)
+                bus.dispatch(Message(sessionCookie))
+            }
         }
     }
 
-    fetch(request1)
-    fetch(request2)
-    fetch(request3)
+    val dolphinEndpointUrl = "http://localhost:8080/dolphin"
+
+    val requestContext = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "CreateContext")
+    ).toJson())
+
+    val requestController = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "CreateController", "n" to "FooController", "c_id" to null)
+    ).toJson())
+
+    val requestLongPoll = Transport.Request(dolphinEndpointUrl, listOf(
+        mapOf("id" to "StartLongPoll")
+    ).toJson())
+
+    fetch(Message(requestContext))
+    fetch(Message(requestController))
+    fetch(Message(requestLongPoll))
 }
 
-private val cookieKey = "Cookie"
-private val setCookieKey = "Set-Cookie"
-private val clientIdKey = "dolphin_platform_intern_dolphinClientId"
+private val headerConnectionKey = "Connection"
+private val headerCookieKey = "Cookie"
+private val headerSetCookieKey = "Set-Cookie"
+private val headerDolphinClientId = "dolphin_platform_intern_dolphinClientId"
 
-private fun createDolphinRequest(
-        commands: String,
-        endpoint: String = "http://localhost:8080/dolphin",
-        clientId: String? = null,
-        sessionCookie: String? = null): Request {
+private fun createOkHttpRequest(
+        request: Transport.Request,
+        dolphinClientId: Transport.DolphinClientId?,
+        sessionCookie: Transport.SessionCookie?): Request {
     val mediaType = MediaType.parse("application/json")
     return Request.Builder().apply {
-        url(endpoint)
-        post(RequestBody.create(mediaType, commands))
-        header("connection", "keep-alive")
-        if (clientId != null) {
-            header(clientIdKey, clientId)
+        url(request.url)
+        post(RequestBody.create(mediaType, request.body))
+        header(headerConnectionKey, "keep-alive")
+        if (dolphinClientId != null) {
+            header(headerDolphinClientId, dolphinClientId.value)
         }
         if (sessionCookie != null) {
-            addHeader(cookieKey, sessionCookie)
+            addHeader(headerCookieKey, sessionCookie.value)
         }
     }.build()
 }
