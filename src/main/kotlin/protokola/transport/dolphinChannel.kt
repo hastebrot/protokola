@@ -13,6 +13,7 @@ import protokola.MessageBus
 import protokola.transport.Transport.ClientRequest
 import protokola.transport.Transport.DolphinClientId
 import protokola.transport.Transport.SessionCookie
+import protokola.transport.Transport.ServerResponse
 import java.util.concurrent.ConcurrentHashMap
 
 fun main(args: Array<String>) {
@@ -43,10 +44,10 @@ fun main(args: Array<String>) {
 
 object Transport {
     data class ClientRequest(val url: String,
-                             val body: String)
+                             val body: String?)
 
     data class ServerResponse(val status: Int,
-                              val body: String)
+                              val body: String?)
 
     data class DolphinClientId(val value: String)
 
@@ -54,7 +55,7 @@ object Transport {
 }
 
 class DolphinChannel {
-    private val client = OkHttpClient.Builder()
+    private val okHttpClient = OkHttpClient.Builder()
 //        .cookieJar(simpleCookieJar())
         .build()
 
@@ -73,19 +74,19 @@ class DolphinChannel {
 
     private fun fetch(bus: MessageBus,
                       clientRequest: Message<ClientRequest>) {
-        val request = createRequest(
+        val okHttpRequest = createRequest(
             clientRequest.payload,
             dolphinClientId,
             sessionCookie
         )
 
-        val call = client.newCall(request)
-        call.execute().use { response ->
-            val dolphinClientIdValue = response.header(headerDolphinClientId)
-            val sessionCookieValue = response.headers(headerSetCookieKey).firstOrNull()
+        val okHttpCall = okHttpClient.newCall(okHttpRequest)
+        okHttpCall.execute().use { okHttpResponse ->
+            val dolphinClientIdValue = okHttpResponse.header(headerDolphinClientId)
+            val sessionCookieValue = okHttpResponse.headers(headerSetCookieKey).firstOrNull()
 
-            val serverResponse = Message(Transport.ServerResponse(
-                response.code(), response.body()!!.string()
+            val serverResponse = Message(ServerResponse(
+                okHttpResponse.code(), okHttpResponse.body()?.string()
             ))
             bus.dispatch(serverResponse)
 
@@ -114,7 +115,7 @@ private fun createRequest(
     val mediaType = MediaType.parse("application/json")
     return Request.Builder().apply {
         url(clientRequest.url)
-        post(RequestBody.create(mediaType, clientRequest.body))
+        post(RequestBody.create(mediaType, clientRequest.body!!))
         header(headerConnectionKey, "keep-alive")
         if (dolphinClientId != null) {
             header(headerDolphinClientId, dolphinClientId.value)
