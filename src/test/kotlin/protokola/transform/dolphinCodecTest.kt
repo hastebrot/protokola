@@ -1,9 +1,8 @@
 package protokola.transform
 
 import com.winterbe.expekt.expect
-import org.junit.jupiter.api.Test
-import protokola.println
 import protokola.transport.Transport
+import kotlin.test.Test
 
 class DolphinCodecTest {
 
@@ -18,7 +17,7 @@ class DolphinCodecTest {
 
         // when:
         val responseContext = Transport.ServerResponse(200, createPresentationModel)
-        val commands = codec.fromJson(responseContext)
+//        val commands = codec.fromJson(responseContext)
 
         // then:
         val command = codec.toCommand(responseContext)
@@ -43,6 +42,5 @@ class DolphinCodecTest {
         expect(command.attributes[3].name).to.equal("model")
         expect(command.attributes[3].value).to.equal(null)
     }
-
 
 }
