@@ -10,7 +10,7 @@ data class Data(val id: Int,
 
 fun main(args: Array<String>) {
     val json = JSON(
-        indented = true,
+        indented = false,
         context = SerialContext()
     )
 
