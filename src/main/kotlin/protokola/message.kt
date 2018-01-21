@@ -2,6 +2,8 @@ package protokola
 
 data class Message<out T>(val payload: T)
 
+typealias MessageHandler = (message: Message<*>) -> Unit
+
 class MessageBus {
     private val messageHandlers = mutableListOf<MessageHandler>()
 
@@ -18,8 +20,6 @@ class MessageBus {
         messageHandlers.forEach { handler -> handler(message) }
     }
 }
-
-typealias MessageHandler = (message: Message<*>) -> Unit
 
 interface MessageHandlerSubscription {
     fun unsubscribe()
