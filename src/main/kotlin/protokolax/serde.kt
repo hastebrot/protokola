@@ -1,12 +1,13 @@
 package protokolax
 
 import kotlinx.serialization.SerialContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 
 @Serializable
 data class Data(val id: Int,
-                val str: String)
+                @SerialName("s") val str: String)
 
 fun main(args: Array<String>) {
     val json = JSON(
@@ -20,7 +21,7 @@ fun main(args: Array<String>) {
     }
 
     run {
-        val string = """ { "id": 123, "str": "foo" } """
+        val string = """ { "id": 123, "s": "foo" } """
         println(json.parse<Data>(string))
     }
 }
