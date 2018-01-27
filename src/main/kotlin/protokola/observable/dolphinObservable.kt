@@ -1,4 +1,4 @@
-package protokolax
+package protokola.observable
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
