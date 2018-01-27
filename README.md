@@ -30,3 +30,5 @@
 - [x] Implement a store that contains messages.
 - [x] Implement a channel that fills the store.
 - [x] Implement a codec that reads and writes messages.
+- [x] Implement a observable that gets and sets values.
+
