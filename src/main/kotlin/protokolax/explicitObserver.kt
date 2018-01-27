@@ -14,9 +14,9 @@ fun main(args: Array<String>) {
 
     // bind fields of the sample object into observable values.
     bean.property(Person::lastName)
-        .binding { println(it) }
+        .binding { println(it.newValue) }
     bean.property(Person::firstName)
-        .binding { println(it) }
+        .binding { println(it.newValue) }
 
     // change a property value.
     bean.property(Person::lastName, "Feuerstein")
@@ -58,28 +58,29 @@ inline fun <reified R : Any> bean() = Bean(R::class)
 class Property<R, T>(private val property: KMutableProperty1<R, T>,
                      private val instance: R) {
 
-    private val bindings = mutableListOf<Binding>()
+    private val handlers = mutableListOf<Handler<ValueChange<T>>>()
 
     var value: T
-        get() =
-            property.get(instance)
-        set(value) {
-            property.set(instance, value)
-            bindings.forEach(Binding::invoke)
+        get() = property.get(instance)
+        set(newValue) {
+            val oldValue = property.get(instance)
+            property.set(instance, newValue)
+            handlers.forEach { handler ->
+                handler(ValueChange(newValue, oldValue))
+            }
         }
 
-
     fun binding(initial: Boolean = true,
-                receive: (T) -> Unit): Binding {
+                handler: Handler<ValueChange<T>>): Binding {
         val handle = {
-            receive(value)
+            handler(ValueChange(value, null))
         }
         if (initial) {
             handle()
         }
-        bindings += handle
+        handlers += handler
         return {
-            bindings -= handle
+            handlers -= handler
         }
     }
 
@@ -87,3 +88,10 @@ class Property<R, T>(private val property: KMutableProperty1<R, T>,
 
 // a binding receives value changes.
 typealias Binding = () -> Unit
+
+typealias Handler<T> = (T) -> Unit
+
+data class Value<out T>(val value: T?)
+
+data class ValueChange<out T>(val newValue: T?,
+                              val oldValue: T?)
