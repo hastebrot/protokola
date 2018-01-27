@@ -31,7 +31,8 @@ fun main(vararg args: String) {
 
         val requestUriFilter = Filter { next -> { request ->
             println(request.uri)
-            next(request)
+            val response = next(request)
+            response
         }}
 
         val request = Request(Method.GET, "http://pokeapi.co/api/v2/pokemon/")
