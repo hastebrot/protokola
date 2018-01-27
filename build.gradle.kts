@@ -1,7 +1,7 @@
 val kotlinVersion by extra { "1.2.20" }
 val okhttpVersion by extra { "3.9.0" }
 val moshiVersion by extra { "1.5.0" }
-val http4kVersion by extra { "3.13.0" }
+val http4kVersion by extra { "3.13.1" }
 val expektVersion by extra { "0.5.0" }
 
 plugins {
@@ -42,6 +42,9 @@ dependencies {
     compile("org.http4k:http4k-core:$http4kVersion")
     compile("org.http4k:http4k-client-okhttp:$http4kVersion")
     compile("org.http4k:http4k-format-moshi:$http4kVersion")
+
+    compile("com.squareup:kotlinpoet:0.6.0")
+    compile("io.reactivex.rxjava2:rxjava:2.1.9")
 }
 
 dependencies {
