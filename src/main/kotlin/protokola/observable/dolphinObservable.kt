@@ -3,7 +3,7 @@ package protokola.observable
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 
-// we need this for plain objects with mutable fields.
+// we need a plain object with mutable fields.
 data class Person(var firstName: String? = null,
                   var lastName: String? = null)
 
