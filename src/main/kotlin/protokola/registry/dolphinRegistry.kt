@@ -1,6 +1,7 @@
 package protokola.registry
 
 import protokola.observable.Bean
+import protokola.println
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -11,12 +12,27 @@ fun main(args: Array<String>) {
     val instance = Person()
 
     val registry = DolphinRegistry()
-    registry.add(instance)
+    registry.register(instance)
+
+    val paths = PropertyPaths()
+    paths.query(instance).println
+
+    paths.register(instance, "foo")
+    paths.query(instance).println
+
+    paths.register(instance, "bar")
+    paths.query(instance).println
+
+    paths.unregister(instance, "foo")
+    paths.query(instance).println
+
+    paths.unregister(instance, "bar")
+    paths.query(instance).println
 }
 
 class DolphinRegistry {
 
-    fun <T : Any> add(instance: T) {
+    fun <T : Any> register(instance: T) {
         val observable = Bean(instance)
         val properties = fetchProperties(instance)
 
@@ -44,3 +60,29 @@ class DolphinRegistry {
 
 }
 
+class PropertyPaths {
+
+    private val registry = mutableMapOf<Any, MutableList<String>>()
+
+    fun query(bean: Any) =
+        registry.getOrElse(bean) { mutableListOf() }
+
+    fun register(bean: Any,
+                 propertyPath: String) {
+        val propertyPaths = query(bean)
+        if (propertyPaths.isEmpty()) {
+            registry[bean] = propertyPaths
+        }
+        propertyPaths += propertyPath
+    }
+
+    fun unregister(bean: Any,
+                   propertyPath: String) {
+        val propertyPaths = query(bean)
+        propertyPaths -= propertyPath
+        if (propertyPaths.isEmpty()) {
+            registry.remove(bean)
+        }
+    }
+
+}
