@@ -1,5 +1,6 @@
 package protokola.registry
 
+import protokola.demo
 import protokola.observable.Bean
 import protokola.println
 import kotlin.reflect.KMutableProperty1
@@ -11,23 +12,27 @@ data class Person(var firstName: String? = null,
 fun main(args: Array<String>) {
     val instance = Person()
 
-    val registry = DolphinRegistry()
-    registry.register(instance)
+    demo("register observable object") {
+        val registry = DolphinRegistry()
+        registry.register(instance)
+    }
 
-    val paths = PropertyPaths()
-    paths.query(instance).println
+    demo("register property paths") {
+        val paths = PropertyPaths()
+        paths.query(instance).println
 
-    paths.register(instance, "foo")
-    paths.query(instance).println
+        paths.register(instance, "foo")
+        paths.query(instance).println
 
-    paths.register(instance, "bar")
-    paths.query(instance).println
+        paths.register(instance, "bar")
+        paths.query(instance).println
 
-    paths.unregister(instance, "foo")
-    paths.query(instance).println
+        paths.unregister(instance, "foo")
+        paths.query(instance).println
 
-    paths.unregister(instance, "bar")
-    paths.query(instance).println
+        paths.unregister(instance, "bar")
+        paths.query(instance).println
+    }
 }
 
 class DolphinRegistry {

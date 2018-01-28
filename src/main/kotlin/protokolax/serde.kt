@@ -6,6 +6,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 //import kotlinx.serialization.Serializer
 import kotlinx.serialization.json.JSON
+import protokola.demo
 
 @Serializable
 data class Data(val id: Int,
@@ -27,17 +28,17 @@ fun main(args: Array<String>) {
         context = SerialContext()
     )
 
-    run {
+    demo {
         val data = Data(123, "foo")
         println(json.stringify(data))
     }
 
-    run {
+    demo {
         val string = """ { "id": 123, "s": "foo" } """
         println(json.parse<Data>(string))
     }
 
-    run {
+    demo {
         val string = """ { "id": 123 } """
         println(json.parse<OtherData>(string).id)
     }
