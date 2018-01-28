@@ -25,42 +25,45 @@ fun main(args: Array<String>) {
     // change another property value.
     bean.property(Person::lastName, "Schmidt")
     bean.property(Person::firstName, "Harald")
+
+//    val fishes = listOf("angel", "clown", "mandarin", "surgeon")
+//    println(fishes)
 }
 
 // a bean serves as a wrapper for a plain object, that provides access to observable values.
-class Bean<R : Any>(private val instance: R) {
+class Bean<T : Any>(private val instance: T) {
 
-    private val properties = mutableMapOf<KMutableProperty1<R, *>, Property<R, *>>()
+    private val properties = mutableMapOf<KMutableProperty1<T, *>, Property<T, *>>()
 
-    constructor(type: KClass<R>) : this(type.java.newInstance()!!)
+    constructor(type: KClass<T>) : this(type.java.newInstance()!!)
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> property(property: KMutableProperty1<R, T>): Property<R, T> =
+    fun <R> property(property: KMutableProperty1<T, R>): Property<T, R> =
         if (property in properties) {
-            properties[property] as Property<R, T>
+            properties[property] as Property<T, R>
         }
         else {
             Property(property, instance)
                 .apply { properties[property] = this }
         }
 
-    fun <T> property(property: KMutableProperty1<R, T>,
-                     newValue: T): Property<R, T> =
+    fun <R> property(property: KMutableProperty1<T, R>,
+                     newValue: R): Property<T, R> =
         property(property)
             .apply { value = newValue }
 
 }
 
 // allows bean creation with bean<Person>() instead of Bean(Person::class).
-inline fun <reified R : Any> bean() = Bean(R::class)
+inline fun <reified T : Any> bean() = Bean(T::class)
 
 // a property allows to observe value changes via bindings.
-class Property<R, T>(private val property: KMutableProperty1<R, T>,
-                     private val instance: R) {
+class Property<T, R>(private val property: KMutableProperty1<T, R>,
+                     private val instance: T) {
 
-    private val handlers = mutableListOf<Handler<ValueChange<T>>>()
+    private val handlers = mutableListOf<Handler<ValueChange<R>>>()
 
-    var value: T
+    var value: R
         get() = property.get(instance)
         set(newValue) {
             val oldValue = property.get(instance)
@@ -71,7 +74,7 @@ class Property<R, T>(private val property: KMutableProperty1<R, T>,
         }
 
     fun binding(initial: Boolean = true,
-                handler: Handler<ValueChange<T>>): Binding {
+                handler: Handler<ValueChange<R>>): Binding {
         val handle = {
             handler(ValueChange(value, null))
         }

@@ -7,8 +7,8 @@ inline val <T> T.println get() = println(this)
 
 inline fun <R> demo(text: String? = null,
                     block: () -> R): R {
-    if (text != null) {
-        println("--demo: $text")
+    text?.let {
+        println("--demo-- $it")
     }
     return run(block)
 }

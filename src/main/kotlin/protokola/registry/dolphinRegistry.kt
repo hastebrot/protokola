@@ -4,6 +4,7 @@ import protokola.demo
 import protokola.observable.Bean
 import protokola.println
 import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 data class Person(var firstName: String? = null,
@@ -41,26 +42,21 @@ class DolphinRegistry {
         val observable = Bean(instance)
         val properties = fetchProperties(instance)
 
-        properties.forEach { property ->
-            println(property.name + ": " + property.returnType)
-            println(observable.property(property))
-        }
+        properties
+            .mapNotNull { it.asMutableProperty() }
+            .forEach { property ->
+                println(property.name + ": " + property.returnType)
+                println(observable.property(property))
+            }
     }
 
+    private fun <T: Any> fetchProperties(instance: T) =
+        instance::class.memberProperties
+
     @Suppress("UNCHECKED_CAST")
-    private fun <T: Any> fetchProperties(instance: T):
-            List<KMutableProperty1<T, *>> {
-        val properties = instance::class.memberProperties
-
-        val mutableProperties = mutableListOf<KMutableProperty1<T, *>>()
-        properties.forEach { property ->
-            if (property is KMutableProperty1<*, *>) {
-                val mutableProperty = property as KMutableProperty1<T, *>
-                mutableProperties += mutableProperty
-            }
-        }
-
-        return mutableProperties
+    private fun <T, R> KProperty1<out T, R>.asMutableProperty() = when (this) {
+        is KMutableProperty1<out T, R> -> this as KMutableProperty1<T, Any?>
+        else -> null
     }
 
 }
