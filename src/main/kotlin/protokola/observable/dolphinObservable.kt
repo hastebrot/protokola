@@ -8,15 +8,15 @@ data class Person(var firstName: String? = null,
                   var lastName: String? = null)
 
 fun main(args: Array<String>) {
-    // wrap a sample object into a bean to make it an observable object.
+    // wrap a plain object into a bean to make it an explicit observable object.
     val bean = Bean(Person())
 //    val bean = Bean(Person::class)
 
-    // bind fields of the sample object into observable values.
+    // bind fields of the plain object into observable values.
     bean.property(Person::lastName)
-        .binding { println(it.newValue) }
+        .binding(false) { println(it.newValue) }
     bean.property(Person::firstName)
-        .binding { println(it.newValue) }
+        .binding(false) { println(it.newValue) }
 
     // change a property value.
     bean.property(Person::lastName, "Feuerstein")
@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
     bean.property(Person::firstName, "Harald")
 }
 
-// a bean serves as a wrapper for an instance, that provides access to observable properties.
+// a bean serves as a wrapper for a plain object, that provides access to observable values.
 class Bean<R : Any>(private val instance: R) {
 
     private val properties = mutableMapOf<KMutableProperty1<R, *>, Property<R, *>>()
