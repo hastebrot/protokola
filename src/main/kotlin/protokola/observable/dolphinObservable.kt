@@ -14,17 +14,20 @@ fun main(args: Array<String>) {
 
     // bind fields of the plain object into observable values.
     bean.property(Person::lastName)
-        .binding(false) { println(it.newValue) }
+        .bind(false) { println(it.newValue) }
     bean.property(Person::firstName)
-        .binding(false) { println(it.newValue) }
+        .bind(false) { println(it.newValue) }
 
     // change a property value.
-    bean.property(Person::lastName, "Feuerstein")
-    bean.property(Person::firstName, "Herbert")
+    bean.property(Person::lastName).set("Feuerstein")
+    bean.property(Person::firstName).set("Herbert")
 
     // change another property value.
-    bean.property(Person::lastName, "Schmidt")
-    bean.property(Person::firstName, "Harald")
+    bean.property(Person::lastName).set("Schmidt")
+    bean.property(Person::firstName).set("Harald")
+
+    bean.removeProperty(Person::lastName)
+    bean.removeProperty(Person::firstName)
 
 //    val fishes = listOf("angel", "clown", "mandarin", "surgeon")
 //    println(fishes)
@@ -37,20 +40,22 @@ class Bean<T : Any>(private val instance: T) {
 
     constructor(type: KClass<T>) : this(type.java.newInstance()!!)
 
-    @Suppress("UNCHECKED_CAST")
     fun <R> property(property: KMutableProperty1<T, R>): Property<T, R> =
-        if (property in properties) {
-            properties[property] as Property<T, R>
-        }
-        else {
-            Property(property, instance)
-                .apply { properties[property] = this }
-        }
+        if (property in properties) retrieveProperty(property)
+        else addProperty(property)
 
-    fun <R> property(property: KMutableProperty1<T, R>,
-                     newValue: R): Property<T, R> =
-        property(property)
-            .apply { value = newValue }
+    fun <R> removeProperty(property: KMutableProperty1<T, R>) {
+        properties[property]!!.unbindAll()
+        properties.remove(property)
+    }
+
+    private fun <R> addProperty(property: KMutableProperty1<T, R>) =
+        Property(property, instance)
+            .apply { properties[property] = this }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <R> retrieveProperty(property: KMutableProperty1<T, R>) =
+        properties[property] as Property<T, R>
 
 }
 
@@ -63,7 +68,7 @@ class Property<T, R>(private val property: KMutableProperty1<T, R>,
 
     private val handlers = mutableListOf<Handler<ValueChange<R>>>()
 
-    var value: R
+    private var value: R
         get() = property.get(instance)
         set(newValue) {
             val oldValue = property.get(instance)
@@ -73,8 +78,12 @@ class Property<T, R>(private val property: KMutableProperty1<T, R>,
             }
         }
 
-    fun binding(initial: Boolean = true,
-                handler: Handler<ValueChange<R>>): Binding {
+    fun get() = value
+
+    fun set(newValue: R) { value = newValue }
+
+    fun bind(initial: Boolean = true,
+             handler: Handler<ValueChange<R>>): Binding {
         val handle = {
             handler(ValueChange(value, null))
         }
@@ -86,6 +95,8 @@ class Property<T, R>(private val property: KMutableProperty1<T, R>,
             handlers -= handler
         }
     }
+
+    fun unbindAll() { handlers.clear() }
 
 }
 
