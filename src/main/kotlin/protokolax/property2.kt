@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
         FooVals::coll.get(foo)
     }
 
-    demo("foo vars push") {
+    demo("wrapper foo vars push") {
         val foo = FooVars("a", 1, true, mutableListOf("a", "b"), listOf(1, 2))
         println(foo.str)
         println(foo.list)
@@ -53,7 +53,7 @@ fun main(args: Array<String>) {
         println(foo.list)
     }
 
-    demo("foo vals push") {
+    demo("wrapper foo vals push") {
         val foo = FooVals("a", 1, true, mutableListOf("a", "b"), mutableListOf(1, 2))
         println(foo.str)
         println(foo.list)
@@ -69,7 +69,7 @@ fun main(args: Array<String>) {
         println(foo.list)
     }
 
-    demo("foo vars splice") {
+    demo("wrapper foo vars splice") {
         val foo = FooVars(list = mutableListOf("a", "b", "c", "d", "e"))
         println(foo.list)
 
@@ -78,45 +78,52 @@ fun main(args: Array<String>) {
     }
 }
 
-open class Wrapper<T, out R>(val instance: T,
-                             val property: KProperty1<T, R?>)
+class Wrapper<T, out R>(val bean: T,
+                        val property: KProperty1<T, R?>)
 
-class MutableWrapper<T, R>(val instance: T,
+class MutableWrapper<T, R>(val bean: T,
                            val property: KMutableProperty1<T, R?>)
 
 private fun <T, R : Any?> Wrapper<T, R>.get(): R?
-    = property.get(instance)
+    = get(bean, property)
 
 private fun <T, R : Any?> MutableWrapper<T, R>.set(value: R?)
-    = property.set(instance, value)
+    = set(bean, property, value)
 
-private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.push(items: Collection<V>)
-    = property.get(instance)!!.addAll(items)
+private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.push(addedItems: Collection<V>)
+    = push(bean, property, addedItems)
 
 private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.pop()
-    = property.get(instance)!!.apply { this!!.removeAt(size - 1) }
+    = pop(bean, property)
 
 private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.splice(startIndex: Int,
                                                                     removedCount: Int,
                                                                     addedItems: Collection<V>)
-    = property.get(instance)!!.subList(startIndex, startIndex + removedCount)
-        .apply { clear() }
-        .apply { addAll(addedItems) }
+    = splice(bean, property, startIndex, removedCount, addedItems)
 
-fun <T, R : Any?> _get(bean: T,
-                       property: KProperty1<T, R?>): R?
+fun <T, R : Any?> get(bean: T,
+                      property: KProperty1<T, R?>): R?
     = property.get(bean)
 
-fun <T, R : Any?> _set(bean: T,
-                       property: KMutableProperty1<T, R?>,
-                       value: R): Unit
+fun <T, R : Any?> set(bean: T,
+                      property: KMutableProperty1<T, R?>,
+                      value: R): Unit
     = property.set(bean, value)
 
-fun <T, R : MutableList<V>?, V : Any?> _splice(bean: T,
-                                               property: KProperty1<T, R?>,
-                                               startIndex: Int,
-                                               removedCount: Int,
-                                               addedItems: Collection<V>)
+fun <T, R : MutableList<V>?, V : Any?> push(bean: T,
+                                            property: KProperty1<T, R>,
+                                            addedItems: Collection<V>): Unit
+    = property.get(bean)!!.run { this!!.addAll(addedItems) }
+
+fun <T, R : MutableList<V>?, V : Any?> pop(bean: T,
+                                           property: KProperty1<T, R?>): V
+    = property.get(bean)!!.run { this!!.removeAt(size - 1) }
+
+fun <T, R : MutableList<V>?, V : Any?> splice(bean: T,
+                                              property: KProperty1<T, R>,
+                                              startIndex: Int,
+                                              removedCount: Int,
+                                              addedItems: Collection<V>): Unit
     = property.get(bean)!!.subList(startIndex, startIndex + removedCount)
         .apply { clear() }
-        .apply { addAll(addedItems) }
+        .run { addAll(addedItems) }
