@@ -1,36 +1,50 @@
 package protokola.observable
 
+import protokola.demo
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 
 // we need a plain object with mutable fields.
 data class Person(var firstName: String? = null,
                   var lastName: String? = null)
 
+data class FishShop(val fishes: MutableList<String> = mutableListOf())
+
 fun main(args: Array<String>) {
-    // wrap a plain object into a bean to make it an explicit observable object.
-    val bean = Bean(Person())
-//    val bean = Bean(Person::class)
+    demo {
+        // wrap a plain object into a bean to make it an explicit observable object.
+        val bean = Bean(Person())
+//        val bean = Bean(Person::class)
 
-    // bind fields of the plain object into observable values.
-    bean.property(Person::lastName)
-        .bind(false) { println(it.newValue) }
-    bean.property(Person::firstName)
-        .bind(false) { println(it.newValue) }
+        // bind fields of the plain object into observable values.
+        bean.property(Person::lastName)
+            .bind(false) { println(it.value) }
+        bean.property(Person::firstName)
+            .bind(false) { println(it.value) }
 
-    // change a property value.
-    bean.property(Person::lastName).set("Feuerstein")
-    bean.property(Person::firstName).set("Herbert")
+        // change a property value.
+        bean.property(Person::lastName).set("Feuerstein")
+        bean.property(Person::firstName).set("Herbert")
 
-    // change another property value.
-    bean.property(Person::lastName).set("Schmidt")
-    bean.property(Person::firstName).set("Harald")
+        // change another property value.
+        bean.property(Person::lastName).set("Schmidt")
+        bean.property(Person::firstName).set("Harald")
 
-    bean.removeProperty(Person::lastName)
-    bean.removeProperty(Person::firstName)
+        bean.removeProperty(Person::lastName)
+        bean.removeProperty(Person::firstName)
+    }
 
-//    val fishes = listOf("angel", "clown", "mandarin", "surgeon")
-//    println(fishes)
+    demo {
+        val bean = Bean(FishShop())
+
+        bean.arrayProperty(FishShop::fishes)
+            .bind(false) { println(it) }
+
+        bean.arrayProperty(FishShop::fishes)
+            .push("angel", "clown", "mandarin", "surgeon")
+    }
+
 }
 
 // a bean serves as a wrapper for a plain object, that provides access to observable values.
@@ -43,6 +57,11 @@ class Bean<T : Any>(private val instance: T) {
     fun <R> property(property: KMutableProperty1<T, R>): Property<T, R> =
         if (property in properties) retrieveProperty(property)
         else addProperty(property)
+
+    fun <R : MutableCollection<V>, V> arrayProperty(
+        property: KProperty1<T, R>): ArrayProperty<T, R, V> {
+        return ArrayProperty(property, instance)
+    }
 
     fun <R> removeProperty(property: KMutableProperty1<T, R>) {
         properties[property]!!.unbindAll()
@@ -100,12 +119,49 @@ class Property<T, R>(private val property: KMutableProperty1<T, R>,
 
 }
 
+class ArrayProperty<T, out R: MutableCollection<V>, V>(private val property: KProperty1<T, R>,
+                          private val instance: T) {
+
+    private val handlers = mutableListOf<Handler<ValueSplice<V>>>()
+
+    private var value: Collection<V>
+        get() = property.get(instance)
+        set(newValue) {
+            val oldValue = property.get(instance)
+//            property.set(instance, newValue)
+            handlers.forEach { handler ->
+//                handler(ValueSplice(newValue, oldValue))
+            }
+        }
+
+    fun push(vararg items: V) {
+        (property.get(instance) as MutableCollection<V>).addAll(items)
+    }
+
+    fun bind(initial: Boolean = true,
+             handler: Handler<ValueSplice<V>>): Binding {
+        val handle = {
+            handler(ValueSplice(value.toList(), 0, value.toList(), 0))
+        }
+        if (initial) {
+            handle()
+        }
+        handlers += handler
+        return {
+            handlers -= handler
+        }
+    }
+}
+
 // a binding receives value changes.
 typealias Binding = () -> Unit
 
 typealias Handler<T> = (T) -> Unit
 
-data class Value<out T>(val value: T?)
-
-data class ValueChange<out T>(val newValue: T?,
+data class ValueChange<out T>(val value: T?,
                               val oldValue: T?)
+
+data class ValueSplice<out T>(val items: List<T>?,
+                              val startIndex: Int,
+                              val removedItems: List<T>?,
+                              val addedCount: Int)
