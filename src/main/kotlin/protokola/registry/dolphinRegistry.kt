@@ -2,16 +2,24 @@ package protokola.registry
 
 import protokola.demo
 import protokola.observable.Bean
+import protokola.observable.Property
+import protokola.observable.get
+import protokola.observable.push
+import protokola.observable.splice
 import protokola.println
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 
 data class Person(var firstName: String? = null,
-                  var lastName: String? = null)
+                  var lastName: String? = null,
+                  var travelDestinations: List<String> = mutableListOf())
 
 fun main(args: Array<String>) {
-    val instance = Person()
+    val instance = Person("foo", "bar")
 
     demo("register observable object") {
         val registry = DolphinRegistry()
@@ -46,7 +54,22 @@ class DolphinRegistry {
             .mapNotNull { it.asMutableProperty() }
             .forEach { property ->
                 println(property.name + ": " + property.returnType)
-                println(observable.property(property))
+
+                val observableProperty = observable.property(property)
+                observableProperty.bindChanges { println(it) }
+                if (property.hasListReturnType()) {
+                    observableProperty.bindSplices { println(it) }
+                }
+
+                println(observableProperty)
+                println(observableProperty.get())
+
+                if (property.hasListReturnType()) {
+                    (observableProperty as Property<T, MutableList<Any>>).push("foo", "bar")
+                    println(observableProperty.get())
+                    (observableProperty as Property<T, MutableList<Any>>).splice(1, 1, "baz", "quux")
+                    println(observableProperty.get())
+                }
             }
     }
 
@@ -57,6 +80,11 @@ class DolphinRegistry {
     private fun <T, R> KProperty1<out T, R>.asMutableProperty() = when (this) {
         is KMutableProperty1<out T, R> -> this as KMutableProperty1<T, Any?>
         else -> null
+    }
+
+    private fun <T, R> KProperty1<out T, R>.hasListReturnType(): Boolean {
+        val collectionType = List::class.createType(listOf(KTypeProjection.STAR))
+        return returnType.isSubtypeOf(collectionType)
     }
 
 }
