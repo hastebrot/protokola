@@ -14,7 +14,7 @@
 
   <a href="https://github.com/canoo">
     <img
-      src="https://img.shields.io/badge/canoo-incubator-yellow.svg?style=flat" 
+      src="https://img.shields.io/badge/canoo-incubator-yellow.svg?style=flat"
       alt="Canoo Incubator" />
   </a>
 
@@ -25,10 +25,39 @@
   </a>
 </p>
 
-## Roadmap for proof of concept
+<!-- TOC depthFrom:2 -->
+
+- [What is Protokola?](#what-is-protokola)
+- [Roadmap](#roadmap)
+- [Status](#status)
+- [About this Repository](#about-this-repository)
+
+<!-- /TOC -->
+
+## What is Protokola?
+
+Protokola is an experimental message infrastructure.
+
+## Roadmap
+
+**Proof of concept (November 2017 &ndash; February 2018):**
 
 - [x] Implement a store that contains messages.
 - [x] Implement a channel that fills the store.
 - [x] Implement a codec that reads and writes messages.
 - [x] Implement a observable that gets and sets values.
+- [ ] Implement a registry that manages observables and property paths.
 
+## Status
+
+*TBD.*
+
+## About this Repository
+
+Protokola currently exists as a mono-repository.
+
+- `protokola.message`
+- `protokola.observable`
+- `protokola.property`
+- `protokola.registry`
+- `protokola.transport`

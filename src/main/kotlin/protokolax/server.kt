@@ -10,9 +10,10 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.then
 import org.http4k.format.Moshi.auto
+import protokola.demo
 
 fun main(vararg args: String) {
-    run {
+    demo {
         val app = httpHandler { request ->
             Response(Status.OK)
                 .body("Hello, ${request.query("name")}")
@@ -26,7 +27,7 @@ fun main(vararg args: String) {
         println(response)
     }
 
-    run {
+    demo {
         val client = OkHttp()
 
         val requestUriFilter = Filter { next -> { request ->
@@ -40,7 +41,7 @@ fun main(vararg args: String) {
         println(requestUriFilter.then(client)(request))
     }
 
-    run {
+    demo {
         val messageLens = Body.auto<Message>().toLens()
 
         val message = Message("hello", Email("alice@foo.org"), Email("bob@foo.org"))
