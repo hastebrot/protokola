@@ -13,7 +13,7 @@ import kotlin.reflect.KMutableProperty1
 data class Person(var firstName: String? = null,
                   var lastName: String? = null)
 
-data class FishShop(var fishes: MutableList<String>? = mutableListOf())
+data class FishShop(var fishes: MutableList<String?>? = mutableListOf())
 
 fun main(args: Array<String>) {
     demo("bind changes") {
@@ -43,7 +43,10 @@ fun main(args: Array<String>) {
         val bean = Bean(FishShop())
 
         bean.property(FishShop::fishes)
-            .bindSplices<List<Any?>, Any>(true) { println(it.removedItems) }
+            .bindSplices(true) { println(it) }
+
+//        bean.property(FishShop::fishes)
+//            .bindSplicesImpl(true) { println(it) }
 
         bean.property(FishShop::fishes)
             .push("angel", "clown", "mandarin", "surgeon")
@@ -106,12 +109,13 @@ class Property<T, R>(val instance: T,
         }
     }
 
-    fun <R : List<V?>, V : Any?> bindSplices(initial: Boolean = true,
-                                             handler: Handler<ValueSplice<R, V>>): Binding {
+    @Suppress("UNCHECKED_CAST")
+    fun <R : List<V?>, V> bindSplicesImpl(initial: Boolean = true,
+                                          handler: Handler<ValueSplice<R?, V>>): Binding {
         spliceHandlers += handler as Handler<ValueSplice<*, *>>
         if (initial) {
-            val items = get() as List<*>
-            emit(ValueSplice(items, 0, listOf<R>(), items.size))
+            val items = get() as List<V?>
+            emit(ValueSplice(items, 0, listOf(), items.size))
         }
         return {
             spliceHandlers -= handler as Handler<ValueSplice<*, *>>
@@ -136,6 +140,10 @@ class Property<T, R>(val instance: T,
     }
 
 }
+
+fun <T, R : List<V?>, V> Property<T, R>.bindSplices(initial: Boolean = true,
+                                                    handler: Handler<ValueSplice<R?, V>>): Binding
+    = bindSplicesImpl(initial, handler)
 
 fun <T, R : Any?> Property<T, R>.get(): R? {
     return get(instance, property)

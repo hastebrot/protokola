@@ -6,6 +6,7 @@ import protokola.observable.Property
 import protokola.observable.get
 import protokola.observable.push
 import protokola.observable.splice
+import protokola.observable.bindSplices
 import protokola.println
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
@@ -57,7 +58,8 @@ class DolphinRegistry {
                 val observableProperty = observable.property(property)
                 observableProperty.bindChanges { println(it) }
                 if (property.hasListReturnType()) {
-                    observableProperty.bindSplices<List<Any?>, Any> { println(it) }
+                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
+                    observablePropertyList.bindSplices { println(it) }
                 }
 
                 println(observableProperty)
