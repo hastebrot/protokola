@@ -28,6 +28,10 @@ fun <T, R : MutableList<V>?, V : Any?> splice(bean: T,
                                               startIndex: Int,
                                               removedCount: Int,
                                               addedItems: Collection<V?>): Collection<V>
-    = property.get(bean)!!.subList(startIndex, startIndex + removedCount)
-        .apply { clear() }
-        .apply { addAll(addedItems as Collection<V>) }
+    = property.get(bean)!!.run {
+        val spliceList = this!!.subList(startIndex, startIndex + removedCount)
+        val removedItems = spliceList.toList()
+        spliceList.clear()
+        spliceList.addAll(addedItems as Collection<V>)
+        removedItems
+    }
