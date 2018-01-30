@@ -43,7 +43,7 @@ fun main(args: Array<String>) {
         val bean = Bean(FishShop())
 
         bean.property(FishShop::fishes)
-            .bindSplices(true) { println(it) }
+            .bindSplices<List<Any?>, Any>(true) { println(it.removedItems) }
 
         bean.property(FishShop::fishes)
             .push("angel", "clown", "mandarin", "surgeon")
@@ -92,7 +92,7 @@ class Property<T, R>(val instance: T,
 
     private val changeHandlers = mutableListOf<Handler<ValueChange<R?>>>()
 
-    private val spliceHandlers = mutableListOf<Handler<ValueSplice<R?>>>()
+    private val spliceHandlers = mutableListOf<Handler<ValueSplice<*, *>>>()
 
     fun bindChanges(initial: Boolean = true,
                     handler: Handler<ValueChange<R?>>): Binding {
@@ -106,15 +106,15 @@ class Property<T, R>(val instance: T,
         }
     }
 
-    fun bindSplices(initial: Boolean = true,
-                    handler: Handler<ValueSplice<R?>>): Binding {
-        spliceHandlers += handler
+    fun <R : List<V?>, V : Any?> bindSplices(initial: Boolean = true,
+                                             handler: Handler<ValueSplice<R, V>>): Binding {
+        spliceHandlers += handler as Handler<ValueSplice<*, *>>
         if (initial) {
-            val items = get() as List<R?>
-            emit(ValueSplice(items, 0, listOf(), items.size) as ValueSplice<R?>)
+            val items = get() as List<*>
+            emit(ValueSplice(items, 0, listOf<R>(), items.size))
         }
         return {
-            spliceHandlers -= handler
+            spliceHandlers -= handler as Handler<ValueSplice<*, *>>
         }
     }
 
@@ -129,7 +129,7 @@ class Property<T, R>(val instance: T,
         }
     }
 
-    fun emit(valueSplice: ValueSplice<R?>) {
+    fun <R : List<V?>, V> emit(valueSplice: ValueSplice<R?, V>) {
         spliceHandlers.forEach { handler ->
             handler(valueSplice)
         }
@@ -151,7 +151,7 @@ fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.push(vararg addedItems: V?
     val startIndex = get(instance, property)!!.size
     push(instance, property, addedItems.toList())
     val items = get(instance, property)
-    emit(ValueSplice(items, startIndex, listOf(), addedItems.size) as ValueSplice<R?>)
+    emit(ValueSplice(items, startIndex, listOf<V>(), addedItems.size))
 }
 
 fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.pop()
@@ -162,7 +162,7 @@ fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.splice(startIndex: Int,
                                                              vararg addedItems: V?) {
     val removedItems = splice(instance, property, startIndex, removedCount, addedItems.toList())
     val items = get(instance, property)
-    emit(ValueSplice(items, startIndex, removedItems.toList(), addedItems.size) as ValueSplice<R?>)
+    emit(ValueSplice(items, startIndex, removedItems.toList(), addedItems.size))
 }
 
 
@@ -170,10 +170,10 @@ typealias Binding = () -> Unit
 
 typealias Handler<T> = (T) -> Unit
 
-data class ValueChange<out T>(val value: T?,
-                              val oldValue: T?)
+data class ValueChange<out R>(val value: R?,
+                              val oldValue: R?)
 
-data class ValueSplice<out T>(val items: List<T?>?,
-                              val startIndex: Int,
-                              val removedItems: List<T?>,
-                              val addedCount: Int)
+data class ValueSplice<out R : List<V?>?, out V>(val items: R?,
+                                                 val startIndex: Int,
+                                                 val removedItems: R,
+                                                 val addedCount: Int)

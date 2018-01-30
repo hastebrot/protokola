@@ -57,7 +57,7 @@ class DolphinRegistry {
                 val observableProperty = observable.property(property)
                 observableProperty.bindChanges { println(it) }
                 if (property.hasListReturnType()) {
-                    observableProperty.bindSplices { println(it) }
+                    observableProperty.bindSplices<List<Any?>, Any> { println(it) }
                 }
 
                 println(observableProperty)
