@@ -9,10 +9,9 @@ import protokola.observable.splice
 import protokola.println
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.starProjectedType
 
 data class Person(var firstName: String? = null,
                   var lastName: String? = null,
@@ -65,9 +64,11 @@ class DolphinRegistry {
                 println(observableProperty.get())
 
                 if (property.hasListReturnType()) {
-                    (observableProperty as Property<T, MutableList<Any>>).push("foo", "bar")
+                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
+                    observablePropertyList.push("foo", "bar", "baz")
                     println(observableProperty.get())
-                    (observableProperty as Property<T, MutableList<Any>>).splice(1, 1, "baz", "quux")
+
+                    observablePropertyList.splice(1, 1, "quux", "quuux")
                     println(observableProperty.get())
                 }
             }
@@ -83,7 +84,7 @@ class DolphinRegistry {
     }
 
     private fun <T, R> KProperty1<out T, R>.hasListReturnType(): Boolean {
-        val collectionType = List::class.createType(listOf(KTypeProjection.STAR))
+        val collectionType = List::class.starProjectedType
         return returnType.isSubtypeOf(collectionType)
     }
 
