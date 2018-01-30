@@ -25,7 +25,7 @@ fun <T, R : MutableList<V>?, V : Any?> splice(bean: T,
                                               property: KProperty1<T, R?>,
                                               startIndex: Int,
                                               removedCount: Int,
-                                              addedItems: Collection<V>): Unit
+                                              addedItems: Collection<V>): Collection<V>
     = property.get(bean)!!.subList(startIndex, startIndex + removedCount)
         .apply { clear() }
-        .run { addAll(addedItems) }
+        .apply { addAll(addedItems) }

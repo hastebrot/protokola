@@ -16,16 +16,16 @@ data class Person(var firstName: String? = null,
 data class FishShop(var fishes: MutableList<String>? = mutableListOf())
 
 fun main(args: Array<String>) {
-    demo {
+    demo("bind changes") {
         // wrap a plain object into a bean to make it an explicit observable object.
         val bean = Bean(Person())
 //        val bean = Bean(Person::class)
 
         // bind fields of the plain object into observable values.
         bean.property(Person::lastName)
-            .bind(true) { println(it.value) }
+            .bindChanges(true) { println(it) }
         bean.property(Person::firstName)
-            .bind(true) { println(it.value) }
+            .bindChanges(true) { println(it) }
 
         // change a property value.
         bean.property(Person::lastName).set("Feuerstein")
@@ -39,26 +39,26 @@ fun main(args: Array<String>) {
         bean.removeProperty(Person::firstName)
     }
 
-    demo {
+    demo("bind splices") {
         val bean = Bean(FishShop())
 
         bean.property(FishShop::fishes)
-            .bind(true) { println(it.value) }
-        println(bean.instance.fishes)
+            .bindSplices(true) { println(it) }
 
         bean.property(FishShop::fishes)
             .push("angel", "clown", "mandarin", "surgeon")
-        println(bean.instance.fishes)
 
         bean.property(FishShop::fishes)
             .splice(1, 2, "foo", "bar")
-        println(bean.instance.fishes)
+
+        bean.property(FishShop::fishes)
+            .push("baz", "quux")
     }
 
 }
 
 // a bean serves as a wrapper for a plain object, that provides access to observable values.
-class Bean<T : Any>(val instance: T) {
+class Bean<T : Any>(private val instance: T) {
 
     private val properties = mutableMapOf<KMutableProperty1<T, *>, Property<T, *>>()
 
@@ -74,7 +74,7 @@ class Bean<T : Any>(val instance: T) {
     }
 
     private fun <R : Any?> addProperty(property: KMutableProperty1<T, R?>) =
-        Property(property, instance)
+        Property(instance, property)
             .apply { properties[property] = this }
 
     @Suppress("UNCHECKED_CAST")
@@ -87,37 +87,59 @@ class Bean<T : Any>(val instance: T) {
 inline fun <reified T : Any> bean() = Bean(T::class)
 
 // a property allows to observe value changes via bindings.
-class Property<T, R>(val property: KMutableProperty1<T, R?>,
-                     val instance: T) {
+class Property<T, R>(val instance: T,
+                     val property: KMutableProperty1<T, R?>) {
 
-    private val handlers = mutableListOf<Handler<ValueChange<R>>>()
+    private val changeHandlers = mutableListOf<Handler<ValueChange<R?>>>()
 
-    fun bind(initial: Boolean = true,
-             handler: Handler<ValueChange<R>>): Binding {
-        handlers += handler
-        val handle = {
-            emit(ValueChange(get(), null))
-        }
+    private val spliceHandlers = mutableListOf<Handler<ValueSplice<R?>>>()
+
+    fun bindChanges(initial: Boolean = true,
+                    handler: Handler<ValueChange<R?>>): Binding {
+        changeHandlers += handler
         if (initial) {
-            handle()
+            val value = get()
+            emit(ValueChange(value, null))
         }
         return {
-            handlers -= handler
+            changeHandlers -= handler
         }
     }
 
-    fun unbindAll() { handlers.clear() }
+    fun bindSplices(initial: Boolean = true,
+                    handler: Handler<ValueSplice<R?>>): Binding {
+        spliceHandlers += handler
+        if (initial) {
+            val items = get() as List<R?>
+            emit(ValueSplice(items, 0, listOf(), items.size) as ValueSplice<R?>)
+        }
+        return {
+            spliceHandlers -= handler
+        }
+    }
 
-    fun emit(valueChange: ValueChange<R>) {
-        handlers.forEach { handler ->
+    fun unbindAll() {
+        changeHandlers.clear()
+        spliceHandlers.clear()
+    }
+
+    fun emit(valueChange: ValueChange<R?>) {
+        changeHandlers.forEach { handler ->
             handler(valueChange)
+        }
+    }
+
+    fun emit(valueSplice: ValueSplice<R?>) {
+        spliceHandlers.forEach { handler ->
+            handler(valueSplice)
         }
     }
 
 }
 
-fun <T, R : Any?> Property<T, R>.get(): R?
-    = get(instance, property)
+fun <T, R : Any?> Property<T, R>.get(): R? {
+    return get(instance, property)
+}
 
 fun <T, R : Any?> Property<T, R>.set(value: R?) {
     val oldValue = get(instance, property)
@@ -125,19 +147,25 @@ fun <T, R : Any?> Property<T, R>.set(value: R?) {
     emit(ValueChange(value, oldValue))
 }
 
-fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.push(vararg items: V)
-    = push(instance, property, items.toList())
+fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.push(vararg addedItems: V) {
+    val startIndex = get(instance, property)!!.size
+    push(instance, property, addedItems.toList())
+    val items = get(instance, property)
+    emit(ValueSplice(items, startIndex, listOf(), addedItems.size) as ValueSplice<R?>)
+}
 
 fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.pop()
     = pop(instance, property)
 
 fun <T, R : MutableList<V>?, V : Any?> Property<T, R>.splice(startIndex: Int,
                                                              removedCount: Int,
-                                                             vararg addedItems: V)
-    = splice(instance, property, startIndex, removedCount, addedItems.toList())
+                                                             vararg addedItems: V) {
+    val removedItems = splice(instance, property, startIndex, removedCount, addedItems.toList())
+    val items = get(instance, property)
+    emit(ValueSplice(items, startIndex, removedItems.toList(), addedItems.size) as ValueSplice<R?>)
+}
 
 
-// a binding receives value changes.
 typealias Binding = () -> Unit
 
 typealias Handler<T> = (T) -> Unit
@@ -145,7 +173,7 @@ typealias Handler<T> = (T) -> Unit
 data class ValueChange<out T>(val value: T?,
                               val oldValue: T?)
 
-data class ValueSplice<out T>(val items: List<T>?,
+data class ValueSplice<out T>(val items: List<T?>?,
                               val startIndex: Int,
-                              val removedItems: List<T>?,
+                              val removedItems: List<T?>,
                               val addedCount: Int)
