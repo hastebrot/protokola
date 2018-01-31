@@ -102,7 +102,7 @@ class Property<T, R>(val instance: T,
         changeHandlers += handler
         if (initial) {
             val value = get()
-            emit(ValueChange(value, null))
+            emit(ValueChange<R>(value, null))
         }
         return {
             changeHandlers -= handler
@@ -111,11 +111,11 @@ class Property<T, R>(val instance: T,
 
     @Suppress("UNCHECKED_CAST")
     fun <R : List<V?>, V> bindSplicesImpl(initial: Boolean = true,
-                                          handler: Handler<ValueSplice<R?, V>>): Binding {
+                                          handler: Handler<ValueSplice<R, V>>): Binding {
         spliceHandlers += handler as Handler<ValueSplice<*, *>>
         if (initial) {
-            val items = get() as List<V?>
-            emit(ValueSplice(items, 0, listOf(), items.size))
+            val items = get() as List<V?>?
+            emit(ValueSplice<List<V?>, V>(items, 0, listOf(), items!!.size))
         }
         return {
             spliceHandlers -= handler as Handler<ValueSplice<*, *>>
@@ -127,13 +127,13 @@ class Property<T, R>(val instance: T,
         spliceHandlers.clear()
     }
 
-    fun emit(valueChange: ValueChange<R?>) {
+    fun emit(valueChange: ValueChange<R>) {
         changeHandlers.forEach { handler ->
             handler(valueChange)
         }
     }
 
-    fun <R : List<V?>, V> emit(valueSplice: ValueSplice<R?, V>) {
+    fun <R : List<V?>, V> emit(valueSplice: ValueSplice<R, V>) {
         spliceHandlers.forEach { handler ->
             handler(valueSplice)
         }
@@ -142,7 +142,7 @@ class Property<T, R>(val instance: T,
 }
 
 fun <T, R : List<V?>, V> Property<T, R>.bindSplices(initial: Boolean = true,
-                                                    handler: Handler<ValueSplice<R?, V>>): Binding
+                                                    handler: Handler<ValueSplice<R, V>>): Binding
     = bindSplicesImpl(initial, handler)
 
 fun <T, R : Any?> Property<T, R>.get(): R? {
@@ -181,7 +181,7 @@ typealias Handler<T> = (T) -> Unit
 data class ValueChange<out R>(val value: R?,
                               val oldValue: R?)
 
-data class ValueSplice<out R : List<V?>?, out V>(val items: R?,
-                                                 val startIndex: Int,
-                                                 val removedItems: R,
-                                                 val addedCount: Int)
+data class ValueSplice<out R : List<V?>, out V>(val items: R?,
+                                                val startIndex: Int,
+                                                val removedItems: R,
+                                                val addedCount: Int)
