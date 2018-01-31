@@ -12,26 +12,24 @@ fun <T, R : Any?> set(bean: T,
                       value: R?): Unit
     = property.set(bean, value)
 
-@Suppress("UNCHECKED_CAST")
-fun <T, R : MutableList<V>?, V : Any?> push(bean: T,
-                                            property: KProperty1<T, R?>,
-                                            items: Collection<V?>): Unit
-    = property.get(bean)!!.run { this!!.addAll(items as Collection<V>) }
+fun <T, R : MutableList<V?>?, V> push(bean: T,
+                                      property: KProperty1<T, R?>,
+                                      items: Collection<V?>): Unit
+    = property.get(bean)!!.run { this!!.addAll(items) }
 
-fun <T, R : MutableList<V>?, V : Any?> pop(bean: T,
-                                           property: KProperty1<T, R?>): V
+fun <T, R : MutableList<V?>?, V> pop(bean: T,
+                                     property: KProperty1<T, R?>): V?
     = property.get(bean)!!.run { this!!.removeAt(size - 1) }
 
-@Suppress("UNCHECKED_CAST")
-fun <T, R : MutableList<V>?, V : Any?> splice(bean: T,
-                                              property: KProperty1<T, R?>,
-                                              startIndex: Int,
-                                              removedCount: Int,
-                                              addedItems: Collection<V?>): Collection<V>
+fun <T, R : MutableList<V?>?, V> splice(bean: T,
+                                        property: KProperty1<T, R?>,
+                                        startIndex: Int,
+                                        removedCount: Int,
+                                        addedItems: Collection<V?>): Collection<V?>
     = property.get(bean)!!.run {
         val spliceList = this!!.subList(startIndex, startIndex + removedCount)
         val removedItems = spliceList.toList()
         spliceList.clear()
-        spliceList.addAll(addedItems as Collection<V>)
+        spliceList.addAll(addedItems)
         removedItems
     }

@@ -58,7 +58,7 @@ class DolphinRegistry {
                 val observableProperty = observable.property(property)
                 observableProperty.bindChanges { println(it) }
                 if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
+                    val observablePropertyList = observableProperty as Property<T, MutableList<Any?>>
                     observablePropertyList.bindSplices { println(it) }
                 }
 
@@ -66,7 +66,7 @@ class DolphinRegistry {
                 println(observableProperty.get())
 
                 if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
+                    val observablePropertyList = observableProperty as Property<T, MutableList<Any?>>
                     observablePropertyList.push("foo", "bar", "baz")
                     println(observableProperty.get())
 
