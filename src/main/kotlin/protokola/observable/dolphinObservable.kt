@@ -155,19 +155,19 @@ fun <T, R : Any?> Property<T, R>.set(value: R?) {
     emit(ValueChange(value, oldValue))
 }
 
-fun <T, R : MutableList<V?>?, V> Property<T, R>.push(vararg addedItems: V?) {
+fun <T, R : MutableList<V?>, V> Property<T, R>.push(vararg addedItems: V?) {
     val startIndex = get(instance, property)!!.size
     push(instance, property, addedItems.toList())
     val items = get(instance, property)
     emit(ValueSplice(items, startIndex, listOf<V>(), addedItems.size))
 }
 
-fun <T, R : MutableList<V?>?, V> Property<T, R>.pop()
+fun <T, R : MutableList<V?>, V> Property<T, R>.pop()
     = pop(instance, property)
 
-fun <T, R : MutableList<V?>?, V> Property<T, R>.splice(startIndex: Int,
-                                                       removedCount: Int,
-                                                       vararg addedItems: V?) {
+fun <T, R : MutableList<V?>, V> Property<T, R>.splice(startIndex: Int,
+                                                      removedCount: Int,
+                                                      vararg addedItems: V?) {
     val removedItems = splice(instance, property, startIndex, removedCount, addedItems.toList())
     val items = get(instance, property)
     emit(ValueSplice(items, startIndex, removedItems.toList(), addedItems.size))
