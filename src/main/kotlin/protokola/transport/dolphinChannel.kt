@@ -10,6 +10,7 @@ import okhttp3.RequestBody
 import okio.Buffer
 import protokola.Message
 import protokola.MessageBus
+import protokola.of
 import protokola.transport.Transport.ClientRequest
 import protokola.transport.Transport.DolphinClientId
 import protokola.transport.Transport.SessionCookie
@@ -65,9 +66,8 @@ class DolphinChannel {
 
     fun dispatchTo(messageBus: MessageBus) {
         messageBus.subscribe { message ->
-            @Suppress("UNCHECKED_CAST")
             when (message.payload) {
-                is ClientRequest -> fetch(messageBus, message as Message<ClientRequest>)
+                is ClientRequest -> fetch(messageBus, message.of())
             }
         }
     }

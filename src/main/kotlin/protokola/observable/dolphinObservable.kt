@@ -162,8 +162,13 @@ fun <T, R : MutableList<V?>, V> Property<T, R>.push(vararg addedItems: V?) {
     emit(ValueSplice(items, startIndex, listOf<V>(), addedItems.size))
 }
 
-fun <T, R : MutableList<V?>, V> Property<T, R>.pop()
-    = pop(instance, property)
+fun <T, R : MutableList<V?>, V> Property<T, R>.pop(): V? {
+    val startIndex = get(instance, property)!!.size - 1
+    val removedItem = pop(instance, property)
+    val items = get(instance, property)
+    emit(ValueSplice(items, startIndex, listOf(removedItem), 1))
+    return removedItem
+}
 
 fun <T, R : MutableList<V?>, V> Property<T, R>.splice(startIndex: Int,
                                                       removedCount: Int,
