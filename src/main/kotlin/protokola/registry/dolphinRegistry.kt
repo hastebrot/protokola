@@ -2,21 +2,38 @@ package protokola.registry
 
 import protokola.demo
 import protokola.observable.Bean
-import protokola.observable.Property
-import protokola.observable.get
-import protokola.observable.push
-import protokola.observable.splice
-import protokola.observable.bindSplices
+import protokola.observable.bean
 import protokola.println
-import kotlin.reflect.KMutableProperty1
+import protokola.registry.ObserveType.CHANGES
+import protokola.registry.ObserveType.PATHS
+import protokola.registry.ObserveType.SPLICES
+import kotlin.collections.Collection
+import kotlin.collections.List
+import kotlin.collections.MutableList
+import kotlin.collections.forEach
+import kotlin.collections.getOrElse
+import kotlin.collections.minusAssign
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.plusAssign
+import kotlin.collections.set
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
 
-data class Person(var firstName: String? = null,
-                  var lastName: String? = null,
-                  var travelDestinations: List<String> = mutableListOf())
+@Target(AnnotationTarget.PROPERTY)
+annotation class Observe(vararg val types: ObserveType)
+
+enum class ObserveType {
+    CHANGES, SPLICES, PATHS
+}
+
+data class Person(
+    @Observe(CHANGES) var firstName: String? = null,
+    @Observe(CHANGES) var lastName: String? = null,
+    @Observe(SPLICES) val foods: List<String> = mutableListOf(),
+    @Observe(SPLICES, PATHS) val friends: List<Person> = mutableListOf()
+)
 
 fun main(args: Array<String>) {
     val instance = Person("foo", "bar")
@@ -47,49 +64,23 @@ fun main(args: Array<String>) {
 class DolphinRegistry {
 
     fun <T : Any> register(instance: T) {
-        val observable = Bean(instance)
-        val properties = fetchProperties(instance)
+        val observable = bean(instance)
+        val properties = properties(instance)
 
-        properties
-            .mapNotNull { it.asMutableProperty() }
-            .forEach { property ->
-                println(property.name + ": " + property.returnType)
+        properties.forEach { property ->
+            val propertyName = property.name
+            val propertyType = property.returnType
+            val propertyImpl = property::class.simpleName
 
-                val observableProperty = observable.property(property)
-                observableProperty.bindChanges { println(it) }
-                if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any?>>
-                    observablePropertyList.bindSplices { println(it) }
-                }
-
-                println(observableProperty)
-                println(observableProperty.get())
-
-                if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any?>>
-                    observablePropertyList.push("foo", "bar", "baz")
-                    println(observableProperty.get())
-
-                    observablePropertyList.splice(1, 1, "quux", "quuux")
-                    println(observableProperty.get())
-                }
+            println("-- $propertyName: $propertyType [$propertyImpl]")
+            property.findAnnotation<Observe>()?.let {
+                println("observe: " + it.types.toList())
             }
+        }
     }
 
-    private fun <T: Any> fetchProperties(instance: T) =
-        instance::class.memberProperties
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T, R> KProperty1<out T, R>.asMutableProperty() = when (this) {
-        is KMutableProperty1<out T, R> -> this as KMutableProperty1<T, Any?>
-        else -> null
-    }
-
-    private fun <T, R> KProperty1<out T, R>.hasListReturnType(): Boolean {
-        val collectionType = List::class.starProjectedType
-        return returnType.isSubtypeOf(collectionType)
-    }
-
+    private fun <T: Any> properties(instance: T): Collection<KProperty1<out T, *>>
+        = instance::class.memberProperties
 }
 
 class PropertyPaths {

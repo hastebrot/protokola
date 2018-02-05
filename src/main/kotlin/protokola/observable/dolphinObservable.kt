@@ -88,6 +88,8 @@ class Bean<T : Any>(private val instance: T) {
 // allows bean creation with bean<Person>() instead of Bean(Person::class).
 inline fun <reified T : Any> bean() = Bean(T::class)
 
+fun <T: Any> bean(instance: T) = Bean(instance)
+
 // a property allows to observe value changes via bindings.
 class Property<T, R>(val instance: T,
                      val property: KMutableProperty1<T, R?>) {
