@@ -1,7 +1,7 @@
 package protokola.registry
 
+import protokola.MessageBus
 import protokola.demo
-import protokola.observable.Bean
 import protokola.observable.bean
 import protokola.println
 import protokola.registry.ObserveType.CHANGES
@@ -39,7 +39,11 @@ fun main(args: Array<String>) {
     val instance = Person("foo", "bar")
 
     demo("register observable object") {
+        val bus = MessageBus()
+
         val registry = DolphinRegistry()
+        registry.dispatchTo(bus)
+
         registry.register(instance)
     }
 
@@ -63,6 +67,10 @@ fun main(args: Array<String>) {
 
 class DolphinRegistry {
 
+    fun dispatchTo(messageBus: MessageBus) {
+        messageBus.subscribe { }
+    }
+
     fun <T : Any> register(instance: T) {
         val observable = bean(instance)
         val properties = properties(instance)
@@ -71,16 +79,18 @@ class DolphinRegistry {
             val propertyName = property.name
             val propertyType = property.returnType
             val propertyImpl = property::class.simpleName
+            val observeTypes = observeTypes(property)
 
-            println("-- $propertyName: $propertyType [$propertyImpl]")
-            property.findAnnotation<Observe>()?.let {
-                println("observe: " + it.types.toList())
-            }
+            println("$propertyName: $propertyType [$propertyImpl] $observeTypes")
         }
     }
 
     private fun <T: Any> properties(instance: T): Collection<KProperty1<out T, *>>
         = instance::class.memberProperties
+
+    private fun observeTypes(property: KProperty1<*, *>)
+        = property.findAnnotation<Observe>()?.types?.toList() ?: emptyList()
+
 }
 
 class PropertyPaths {
