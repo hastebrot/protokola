@@ -22,9 +22,12 @@ fun main(args: Array<String>) {
 
         // bind fields of the plain object into observable values.
         bean.property(Person::lastName)
-            .bindChanges(true) { println(it) }
+            .bindChanges { println(it) }
         bean.property(Person::firstName)
-            .bindChanges(true) { println(it) }
+            .bindChanges { println(it) }
+
+        bean.property(Person::lastName).emitValueChange()
+        bean.property(Person::firstName).emitValueChange()
 
         // change a property value.
         bean.property(Person::lastName).set("Feuerstein")
@@ -42,10 +45,11 @@ fun main(args: Array<String>) {
         val bean = Bean(FishShop())
 
         bean.property(FishShop::fishes)
-            .bindSplices(true) { println(it) }
-
+            .bindSplices { println(it) }
 //        bean.property(FishShop::fishes)
-//            .bindSplicesImpl(true) { println(it) }
+//            .bindSplicesImpl { println(it) }
+
+        bean.property(FishShop::fishes).emitValueSplice()
 
         bean.property(FishShop::fishes)
             .push("angel", "clown", "mandarin", "surgeon")
@@ -98,26 +102,16 @@ class Property<T, R>(val instance: T,
 
     private val spliceHandlers = mutableListOf<Handler<ValueSplice<*, *>>>()
 
-    fun bindChanges(initial: Boolean = true,
-                    handler: Handler<ValueChange<R?>>): Binding {
+    fun bindChanges(handler: Handler<ValueChange<R?>>): Binding {
         changeHandlers += handler
-        if (initial) {
-            val value = get()
-            emit(ValueChange<R>(value, null))
-        }
         return {
             changeHandlers -= handler
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <R : List<V?>, V> bindSplicesImpl(initial: Boolean = true,
-                                          handler: Handler<ValueSplice<R, V>>): Binding {
+    fun <R : List<V?>, V> bindSplicesImpl(handler: Handler<ValueSplice<R, V>>): Binding {
         spliceHandlers += handler as Handler<ValueSplice<*, *>>
-        if (initial) {
-            val items = get() as List<V?>?
-            emit(ValueSplice<List<V?>, V>(items, 0, listOf(), items!!.size))
-        }
         return {
             spliceHandlers -= handler as Handler<ValueSplice<*, *>>
         }
@@ -140,11 +134,20 @@ class Property<T, R>(val instance: T,
         }
     }
 
+    fun emitValueChange() {
+        val value = get() as R?
+        emit(ValueChange(value, null))
+    }
+
+    fun emitValueSplice() {
+        val items = get() as List<Any?>?
+        emit(ValueSplice(items, 0, listOf(), items!!.size))
+    }
+
 }
 
-fun <T, R : List<V?>, V> Property<T, R>.bindSplices(initial: Boolean = true,
-                                                    handler: Handler<ValueSplice<R, V>>): Binding
-    = bindSplicesImpl(initial, handler)
+fun <T, R : List<V?>, V> Property<T, R>.bindSplices(handler: Handler<ValueSplice<R, V>>): Binding
+    = bindSplicesImpl(handler)
 
 fun <T, R : Any?> Property<T, R>.get(): R? {
     return get(instance, property)
