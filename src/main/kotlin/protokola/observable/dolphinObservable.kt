@@ -1,5 +1,6 @@
 package protokola.observable
 
+import protokola.Message
 import protokola.demo
 import protokola.property.get
 import protokola.property.push
@@ -22,12 +23,12 @@ fun main(args: Array<String>) {
 
         // bind fields of the plain object into observable values.
         bean.property(Person::lastName)
-            .bindChanges { println(it) }
+            .bind { println(it.payload) }
         bean.property(Person::firstName)
-            .bindChanges { println(it) }
+            .bind { println(it.payload) }
 
-        bean.property(Person::lastName).emitValueChange()
-        bean.property(Person::firstName).emitValueChange()
+        bean.property(Person::lastName).emitInitialChange()
+        bean.property(Person::firstName).emitInitialChange()
 
         // change a property value.
         bean.property(Person::lastName).set("Feuerstein")
@@ -45,11 +46,9 @@ fun main(args: Array<String>) {
         val bean = Bean(FishShop())
 
         bean.property(FishShop::fishes)
-            .bindSplices { println(it) }
-//        bean.property(FishShop::fishes)
-//            .bindSplicesImpl { println(it) }
+            .bind { println(it.payload) }
 
-        bean.property(FishShop::fishes).emitValueSplice()
+        bean.property(FishShop::fishes).emitInitialSplice()
 
         bean.property(FishShop::fishes)
             .push("angel", "clown", "mandarin", "surgeon")
@@ -98,56 +97,42 @@ fun <T: Any> bean(instance: T) = Bean(instance)
 class Property<T, R>(val instance: T,
                      val property: KMutableProperty1<T, R?>) {
 
-    private val changeHandlers = mutableListOf<Handler<ValueChange<R?>>>()
+    private val handlers = mutableListOf<Handler<Message<*>>>()
 
-    private val spliceHandlers = mutableListOf<Handler<ValueSplice<*, *>>>()
-
-    fun bindChanges(handler: Handler<ValueChange<R?>>): Binding {
-        changeHandlers += handler
+    fun bind(handler: Handler<Message<*>>): Binding {
+        handlers += handler
         return {
-            changeHandlers -= handler
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <R : List<V?>, V> bindSplicesImpl(handler: Handler<ValueSplice<R, V>>): Binding {
-        spliceHandlers += handler as Handler<ValueSplice<*, *>>
-        return {
-            spliceHandlers -= handler as Handler<ValueSplice<*, *>>
+            handlers -= handler
         }
     }
 
     fun unbindAll() {
-        changeHandlers.clear()
-        spliceHandlers.clear()
+        handlers.clear()
     }
 
     fun emit(valueChange: ValueChange<R>) {
-        changeHandlers.forEach { handler ->
-            handler(valueChange)
+        handlers.forEach { handler ->
+            handler(Message(valueChange))
         }
     }
 
     fun <R : List<V?>, V> emit(valueSplice: ValueSplice<R, V>) {
-        spliceHandlers.forEach { handler ->
-            handler(valueSplice)
+        handlers.forEach { handler ->
+            handler(Message(valueSplice))
         }
     }
 
-    fun emitValueChange() {
+    fun emitInitialChange() {
         val value = get() as R?
         emit(ValueChange(value, null))
     }
 
-    fun emitValueSplice() {
+    fun emitInitialSplice() {
         val items = get() as List<Any?>?
         emit(ValueSplice(items, 0, listOf(), items!!.size))
     }
 
 }
-
-fun <T, R : List<V?>, V> Property<T, R>.bindSplices(handler: Handler<ValueSplice<R, V>>): Binding
-    = bindSplicesImpl(handler)
 
 fun <T, R : Any?> Property<T, R>.get(): R? {
     return get(instance, property)
