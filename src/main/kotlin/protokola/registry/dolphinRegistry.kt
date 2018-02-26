@@ -42,14 +42,16 @@ data class Person(
 
 fun main(args: Array<String>) {
     demo("register observable object") {
+        val registry = DolphinRegistry()
+
         val instance = Person("foo", "bar")
+        registry.register(instance)
 
         val bus = MessageBus()
-
-        val registry = DolphinRegistry()
         registry.dispatchTo(bus)
-
-        registry.register(instance)
+        bus.subscribe {
+            println(it.payload)
+        }
 
         registry.observable(instance).property(Person::firstName)
             .set("bar")
@@ -86,12 +88,14 @@ class DolphinRegistry {
 
     val observables = IdentityHashMap<Any, Bean<*>>()
 
+    var messageBus: MessageBus? = null
+
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> observable(instance: T)
         = observables[instance] as Bean<T>
 
     fun dispatchTo(messageBus: MessageBus) {
-        messageBus.subscribe { }
+        this.messageBus = messageBus
     }
 
     fun <T : Any> register(instance: T) {
@@ -110,13 +114,13 @@ class DolphinRegistry {
 
             if (CHANGE in observeTypes) {
                 observable.property<Any?>(property.ofMutable()).bind {
-                    println(it.payload)
+                    messageBus?.dispatch(it)
                 }
             }
 
             if (SPLICE in observeTypes) {
                 observable.property<Any?>(property.ofMutable()).bind {
-                    println(it.payload)
+                    messageBus?.dispatch(it)
                 }
             }
         }
