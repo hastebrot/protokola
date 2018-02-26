@@ -10,6 +10,7 @@ import protokola.println
 import protokola.registry.ObserveType.CHANGE
 import protokola.registry.ObserveType.LINK
 import protokola.registry.ObserveType.SPLICE
+import java.util.IdentityHashMap
 import kotlin.collections.Collection
 import kotlin.collections.List
 import kotlin.collections.MutableList
@@ -49,6 +50,16 @@ fun main(args: Array<String>) {
         registry.dispatchTo(bus)
 
         registry.register(instance)
+
+        registry.observable(instance).property(Person::firstName)
+            .set("bar")
+        registry.observable(instance).property(Person::firstName)
+            .set("baz")
+
+        registry.observable(instance).property<MutableList<Any?>>(Person::foods.ofMutable())
+            .splice(0, 0, "foo", "bar")
+        registry.observable(instance).property<MutableList<Any?>>(Person::foods.ofMutable())
+            .splice(1, 1, "baz", "quux")
     }
 
     demo("register property paths") {
@@ -73,12 +84,20 @@ fun main(args: Array<String>) {
 
 class DolphinRegistry {
 
+    val observables = IdentityHashMap<Any, Bean<*>>()
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> observable(instance: T)
+        = observables[instance] as Bean<T>
+
     fun dispatchTo(messageBus: MessageBus) {
         messageBus.subscribe { }
     }
 
     fun <T : Any> register(instance: T) {
         val observable = bean(instance)
+        observables[instance] = observable
+
         val properties = properties(instance)
 
         properties.forEach { property ->
@@ -101,16 +120,6 @@ class DolphinRegistry {
                 }
             }
         }
-
-        (observable as Bean<Person>).property(Person::firstName)
-            .set("bar")
-        (observable as Bean<Person>).property(Person::firstName)
-            .set("baz")
-
-        (observable as Bean<Person>).property<MutableList<Any?>>(Person::foods.ofMutable())
-            .splice(0, 0, "foo", "bar")
-        (observable as Bean<Person>).property<MutableList<Any?>>(Person::foods.ofMutable())
-            .splice(1, 1, "baz", "quux")
     }
 
     private fun <T: Any> properties(instance: T): Collection<KProperty1<out T, *>>
@@ -118,10 +127,6 @@ class DolphinRegistry {
 
     private fun observeTypes(property: KProperty1<*, *>)
         = property.findAnnotation<Observe>()?.types?.toList() ?: emptyList()
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T, R, T1, R1> KProperty1<T, R>.ofMutable()
-        = this as KMutableProperty1<T1, R1>
 
 }
 
@@ -151,3 +156,7 @@ class PropertyPaths {
     }
 
 }
+
+@Suppress("UNCHECKED_CAST")
+private fun <T, R, T1, R1> KProperty1<T, R>.ofMutable()
+    = this as KMutableProperty1<T1, R1>
