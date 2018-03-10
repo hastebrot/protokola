@@ -1,14 +1,16 @@
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.Coroutines
 
-val kotlinVersion by extra { "1.2.21" }
-val kotlinSerialVersion by extra { "0.4.1" }
-val okhttpVersion by extra { "3.9.1" }
+val kotlinVersion by extra { "1.2.30" }
+val kotlinSerialVersion by extra { "0.4.2" }
+val kotlinCoroutineVersion by extra { "0.22.5" }
+val okhttpVersion by extra { "3.10.0" }
 val moshiVersion by extra { "1.5.0" }
-val http4kVersion by extra { "3.17.1" }
+val http4kVersion by extra { "3.18.1" }
 val expektVersion by extra { "0.5.0" }
 
 plugins {
-    kotlin("jvm") version "1.2.21"
+    kotlin("jvm") version "1.2.30"
     id("org.jetbrains.dokka") version "0.9.16"
 }
 
@@ -19,7 +21,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:0.4.1")
+        classpath("org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:0.4.2")
     }
 }
 
@@ -39,6 +41,7 @@ dependencies {
     compile(kotlin("stdlib-jdk8", kotlinVersion))
 
     compile("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinSerialVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
     compile("com.squareup.okhttp3:okhttp:$okhttpVersion")
     compile("com.squareup.moshi:moshi:$moshiVersion")
     compile("com.squareup.moshi:moshi-kotlin:$moshiVersion")
@@ -63,8 +66,21 @@ dependencies {
 }
 
 tasks {
+    withType<DokkaTask> {
+        outputFormat = "javadoc"
+        outputDirectory = "$buildDir/javadoc"
+    }
+
     "dokkaJavadoc"(DokkaTask::class) {
         outputFormat = "javadoc"
         outputDirectory = "$buildDir/javadoc"
     }
+
+//    "test"(Test::class) {
+//        useJUnitPlatform()
+//    }
+}
+
+kotlin {
+    experimental.coroutines = Coroutines.ENABLE
 }
