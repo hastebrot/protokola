@@ -13,27 +13,6 @@ import kotlinx.serialization.json.JSON
 import protokola.demo
 import kotlin.reflect.jvm.jvmName
 
-@Serializable
-data class Data(val id: Int,
-                @SerialName("s") val str: String)
-
-@Serializable
-data class OtherData(val id: Int) {
-
-    @Serializer(forClass = OtherData::class)
-    companion object : KSerializer<OtherData> {
-        override val serialClassDesc: KSerialClassDesc
-            = SerialClassDescImpl(OtherData::class.jvmName)
-
-        override fun load(input: KInput)
-            = OtherData(input.readIntValue())
-
-        override fun save(output: KOutput, obj: OtherData)
-            = TODO("not implemented")
-    }
-
-}
-
 fun main(args: Array<String>) {
     val json = JSON(
         indented = false,
@@ -54,4 +33,25 @@ fun main(args: Array<String>) {
         val string = """123"""
         println(json.parse<OtherData>(string).id)
     }
+}
+
+@Serializable
+data class Data(val id: Int,
+                @SerialName("s") val str: String)
+
+@Serializable
+data class OtherData(val id: Int) {
+
+    @Serializer(forClass = OtherData::class)
+    companion object : KSerializer<OtherData> {
+        override val serialClassDesc: KSerialClassDesc
+            = SerialClassDescImpl(OtherData::class.jvmName)
+
+        override fun load(input: KInput)
+            = OtherData(input.readIntValue())
+
+        override fun save(output: KOutput, obj: OtherData)
+            = TODO("not implemented")
+    }
+
 }
