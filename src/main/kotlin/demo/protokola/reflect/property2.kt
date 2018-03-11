@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.reflect
 
 import protokola.demo
 import kotlin.reflect.KMutableProperty1
@@ -97,8 +97,8 @@ private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.pop()
     = pop(bean, property)
 
 private fun <T, R : MutableList<V>?, V : Any?> Wrapper<T, R>.splice(startIndex: Int,
-                                                                    removedCount: Int,
-                                                                    addedItems: Collection<V>)
+                                                                                           removedCount: Int,
+                                                                                           addedItems: Collection<V>)
     = splice(bean, property, startIndex, removedCount, addedItems)
 
 fun <T, R : Any?> get(bean: T,

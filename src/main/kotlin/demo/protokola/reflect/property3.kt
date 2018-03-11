@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.reflect
 
 import protokola.println
 import kotlin.reflect.KClass

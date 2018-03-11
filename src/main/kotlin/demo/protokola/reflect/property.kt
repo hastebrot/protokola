@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.reflect
 
 import kotlin.reflect.KMutableProperty
 //import kotlin.reflect.KProperty

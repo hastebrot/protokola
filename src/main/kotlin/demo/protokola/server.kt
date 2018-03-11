@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola
 
 import org.http4k.client.OkHttp
 import org.http4k.core.Body

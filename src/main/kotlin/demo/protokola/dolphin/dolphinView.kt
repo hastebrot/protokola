@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.dolphin
 
 import com.canoo.platform.core.DolphinRuntimeException
 import com.canoo.platform.remoting.client.ClientConfiguration

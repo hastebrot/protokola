@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola
 
 import com.rubylichtenstein.rxtest.assertions.should
 import com.rubylichtenstein.rxtest.assertions.shouldEmit

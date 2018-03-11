@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.dolphin
 
 import com.canoo.platform.remoting.DolphinBean
 import com.canoo.platform.remoting.ObservableList

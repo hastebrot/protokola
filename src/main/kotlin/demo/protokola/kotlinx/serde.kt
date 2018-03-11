@@ -1,4 +1,4 @@
-package protokolax
+package demo.protokola.kotlinx
 
 import kotlinx.serialization.KInput
 import kotlinx.serialization.KOutput
