@@ -1,32 +1,63 @@
 package protokola.registry
 
+import protokola.MessageBus
 import protokola.demo
 import protokola.observable.Bean
-import protokola.observable.Property
-import protokola.observable.get
-import protokola.observable.push
+import protokola.observable.bean
+import protokola.observable.set
 import protokola.observable.splice
-import protokola.observable.bindSplices
 import protokola.println
+import protokola.registry.ObserveType.CHANGE
+import protokola.registry.ObserveType.LINK
+import protokola.registry.ObserveType.SPLICE
+import java.util.IdentityHashMap
+import kotlin.collections.set
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
 
-data class Person(var firstName: String? = null,
-                  var lastName: String? = null,
-                  var travelDestinations: List<String> = mutableListOf())
+@Target(AnnotationTarget.PROPERTY)
+annotation class Observe(vararg val types: ObserveType)
+
+enum class ObserveType {
+    CHANGE, SPLICE, LINK
+}
+
+data class Person(
+    @Observe(CHANGE) var firstName: String? = null,
+    @Observe(CHANGE) var lastName: String? = null,
+    @Observe(SPLICE) var foods: List<String> = mutableListOf(),
+    @Observe(SPLICE, LINK) var friends: List<Person> = mutableListOf()
+)
 
 fun main(args: Array<String>) {
-    val instance = Person("foo", "bar")
-
     demo("register observable object") {
         val registry = DolphinRegistry()
+
+        val instance = Person("foo", "bar")
         registry.register(instance)
+
+        val bus = MessageBus()
+        registry.dispatchTo(bus)
+        bus.subscribe {
+            println(it.payload)
+        }
+
+        registry.observable(instance).property(Person::firstName)
+            .set("bar")
+        registry.observable(instance).property(Person::firstName)
+            .set("baz")
+
+        registry.observable(instance).property<MutableList<Any?>>(Person::foods.ofMutable())
+            .splice(0, 0, "foo", "bar")
+        registry.observable(instance).property<MutableList<Any?>>(Person::foods.ofMutable())
+            .splice(1, 1, "baz", "quux")
     }
 
     demo("register property paths") {
+        val instance = Person("foo", "bar")
+
         val paths = PropertyPaths()
         paths.query(instance).println
 
@@ -46,49 +77,51 @@ fun main(args: Array<String>) {
 
 class DolphinRegistry {
 
-    fun <T : Any> register(instance: T) {
-        val observable = Bean(instance)
-        val properties = fetchProperties(instance)
+    val observables = IdentityHashMap<Any, Bean<*>>()
 
-        properties
-            .mapNotNull { it.asMutableProperty() }
-            .forEach { property ->
-                println(property.name + ": " + property.returnType)
-
-                val observableProperty = observable.property(property)
-                observableProperty.bindChanges { println(it) }
-                if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
-                    observablePropertyList.bindSplices { println(it) }
-                }
-
-                println(observableProperty)
-                println(observableProperty.get())
-
-                if (property.hasListReturnType()) {
-                    val observablePropertyList = observableProperty as Property<T, MutableList<Any>>
-                    observablePropertyList.push("foo", "bar", "baz")
-                    println(observableProperty.get())
-
-                    observablePropertyList.splice(1, 1, "quux", "quuux")
-                    println(observableProperty.get())
-                }
-            }
-    }
-
-    private fun <T: Any> fetchProperties(instance: T) =
-        instance::class.memberProperties
+    var messageBus: MessageBus? = null
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T, R> KProperty1<out T, R>.asMutableProperty() = when (this) {
-        is KMutableProperty1<out T, R> -> this as KMutableProperty1<T, Any?>
-        else -> null
+    fun <T : Any> observable(instance: T)
+        = observables[instance] as Bean<T>
+
+    fun dispatchTo(messageBus: MessageBus) {
+        this.messageBus = messageBus
     }
 
-    private fun <T, R> KProperty1<out T, R>.hasListReturnType(): Boolean {
-        val collectionType = List::class.starProjectedType
-        return returnType.isSubtypeOf(collectionType)
+    fun <T : Any> register(instance: T) {
+        val observable = bean(instance)
+        observables[instance] = observable
+
+        val properties = properties(instance)
+
+        properties.forEach { property ->
+            val propertyName = property.name
+            val propertyType = property.returnType
+            val propertyImpl = property::class.simpleName
+            val observeTypes = observeTypes(property)
+
+            println("$propertyName: $propertyType [$propertyImpl] $observeTypes")
+
+            if (CHANGE in observeTypes) {
+                observable.property<Any?>(property.ofMutable()).bind {
+                    messageBus?.dispatch(it)
+                }
+            }
+
+            if (SPLICE in observeTypes) {
+                observable.property<Any?>(property.ofMutable()).bind {
+                    messageBus?.dispatch(it)
+                }
+            }
+        }
     }
+
+    private fun <T: Any> properties(instance: T): Collection<KProperty1<out T, *>>
+        = instance::class.memberProperties
+
+    private fun observeTypes(property: KProperty1<*, *>)
+        = property.findAnnotation<Observe>()?.types?.toList() ?: emptyList()
 
 }
 
@@ -118,3 +151,7 @@ class PropertyPaths {
     }
 
 }
+
+@Suppress("UNCHECKED_CAST")
+private fun <T, R, T1, R1> KProperty1<T, R>.ofMutable()
+    = this as KMutableProperty1<T1, R1>

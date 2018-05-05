@@ -25,11 +25,11 @@
   </a>
 </p>
 
-<!-- TOC depthFrom:2 -->
+<!-- TOC depthFrom:2 depthTo:2 -->
 
 - [What is Protokola?](#what-is-protokola)
 - [Roadmap](#roadmap)
-- [Status](#status)
+- [Implementation Status](#implementation-status)
 - [About this Repository](#about-this-repository)
 
 <!-- /TOC -->
@@ -48,9 +48,16 @@ Protokola is an experimental message infrastructure.
 - [x] Implement a observable that gets and sets values.
 - [ ] Implement a registry that manages observables and property paths.
 
-## Status
+## Implementation Status
 
-*TBD.*
+Components for a "Dolphin Platform 1.x"-compatible server and client.
+
+Component | Features
+----------|----------
+Channel | :sunny: ClientRequest, :sunny: ServerResponse, :sunny: DolphinClientId, :sunny: SessionCookie.
+Codec | :sunny: CreatePresentationalModel, :umbrella: CreateContext, :umbrella: DestroyContext, :umbrella: CreateController, :umbrella: DestroyController, :sunny: DestroyPresentationalModelCommand, :umbrella: ValueChanged, :umbrella: CallAction, :umbrella: StartLongPoll, :umbrella: InterruptLongPoll.
+Observable | :sunny: get(value), :sunny: set(value), :sunny: push(array), :sunny: pop(array), :sunny: splice(array).
+Registry | :umbrella: Observable Property Registry, :umbrella: Property Path Registry.
 
 ## About this Repository
 

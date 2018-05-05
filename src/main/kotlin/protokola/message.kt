@@ -2,6 +2,9 @@ package protokola
 
 data class Message<out T>(val payload: T)
 
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> Message<*>.of() = this as Message<T>
+
 typealias MessageHandler = (message: Message<*>) -> Unit
 
 class MessageBus {
