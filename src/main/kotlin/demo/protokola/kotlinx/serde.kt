@@ -25,13 +25,16 @@ fun main(args: Array<String>) {
     }
 
     demo {
-        val string = """ { "id": 123, "s": "foo" } """
+        val string = """
+            { "id": 123, "s": "foo" }
+        """.trimIndent()
         println(json.parse<Data>(string))
     }
 
     demo {
         val string = """123"""
         println(json.parse<OtherData>(string).id)
+//        println(json.stringify(OtherData(123)))
     }
 }
 
