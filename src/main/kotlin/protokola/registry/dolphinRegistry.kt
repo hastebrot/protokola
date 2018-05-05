@@ -11,15 +11,6 @@ import protokola.registry.ObserveType.CHANGE
 import protokola.registry.ObserveType.LINK
 import protokola.registry.ObserveType.SPLICE
 import java.util.IdentityHashMap
-import kotlin.collections.Collection
-import kotlin.collections.List
-import kotlin.collections.MutableList
-import kotlin.collections.forEach
-import kotlin.collections.getOrElse
-import kotlin.collections.minusAssign
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
-import kotlin.collections.plusAssign
 import kotlin.collections.set
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
