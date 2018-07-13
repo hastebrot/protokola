@@ -2,28 +2,30 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val kotlinVersion by extra { "1.2.41" }
-val kotlinSerialVersion by extra { "0.5.0" }
-val kotlinCoroutineVersion by extra { "0.22.5" }
-val okhttpVersion by extra { "3.10.0" }
-val moshiVersion by extra { "1.5.0" }
-val http4kVersion by extra { "3.26.5" }
+val gradleWrapperVersion by extra { "4.9-rc-2" }
+val kotlinVersion by extra { "1.2.51" }
+val kotlinSerialVersion by extra { "0.6.0" }
+val kotlinCoroutinesVersion by extra { "0.23.4" }
+val okhttpVersion by extra { "3.11.0" }
+val moshiVersion by extra { "1.6.0" }
+val http4kVersion by extra { "3.33.0" }
 val expektVersion by extra { "0.5.0" }
 val kotlinPoetVersion by extra { "0.7.0" }
-val rxjavaVersion by extra { "2.1.13" }
+val jacksonVersion by extra { "2.9.6" }
+val rxjavaVersion by extra { "2.1.16" }
 val rxtestVersion by extra { "1.0.7" }
 val dolphinPlatformVersion by extra { "0.18.0" }
 
 plugins {
-    val kotlinVersion = "1.2.41"
-    val dokkaVersion = "0.9.16"
+    val kotlinVersion = "1.2.51"
+    val dokkaVersion = "0.9.17"
 
     kotlin("jvm") version kotlinVersion
     id("org.jetbrains.dokka") version dokkaVersion
 }
 
 buildscript {
-    val kotlinSerialVersion by extra { "0.5.0" }
+    val kotlinSerialVersion by extra { "0.6.0" }
 
     repositories {
         mavenCentral()
@@ -54,10 +56,11 @@ dependencies {
     compile("com.squareup.okhttp3:okhttp:$okhttpVersion")
     compile("com.squareup.moshi:moshi:$moshiVersion")
     compile("com.squareup.moshi:moshi-kotlin:$moshiVersion")
+    compile("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
-    compile("org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$kotlinCoroutineVersion")
-    compile("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:$kotlinCoroutineVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$kotlinCoroutinesVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:$kotlinCoroutinesVersion")
     compile("io.reactivex.rxjava2:rxjava:$rxjavaVersion")
     compile("com.squareup:kotlinpoet:$kotlinPoetVersion")
 
@@ -71,16 +74,16 @@ dependencies {
 
 dependencies {
     testCompile(kotlin("test", kotlinVersion))
-    testCompile(kotlin("test-junit", kotlinVersion))
+    testCompile(kotlin("test-junit5", kotlinVersion))
 
     testCompile("com.winterbe:expekt:$expektVersion")
     testImplementation("com.rubylichtenstein:rxtest:$rxtestVersion")
 }
 
-//java {
-//    sourceCompatibility = JavaVersion.VERSION_1_8
-//    targetCompatibility = JavaVersion.VERSION_1_8
-//}
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
 kotlin {
     experimental.coroutines = Coroutines.ENABLE
@@ -102,7 +105,7 @@ tasks {
     }
 
     "wrapper"(Wrapper::class) {
-        gradleVersion = "4.7"
-        distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+        gradleVersion = gradleWrapperVersion
+        distributionType = Wrapper.DistributionType.ALL
     }
 }
