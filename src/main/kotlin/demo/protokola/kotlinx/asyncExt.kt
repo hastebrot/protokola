@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.cancelAndJoin
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.actor
 import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.joinAll
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.newSingleThreadContext
 import kotlinx.coroutines.experimental.runBlocking
@@ -20,6 +21,7 @@ import kotlinx.coroutines.experimental.withTimeoutOrNull
 import protokola.demo
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.experimental.coroutineContext
 import kotlin.system.measureTimeMillis
 
 fun main(args: Array<String>) {
@@ -158,7 +160,7 @@ fun main(args: Array<String>) {
             jobs += launch(newSingleThreadContext("MyOwnThread")) {
                 log("new single thread context")
             }
-            jobs.forEach { it.join() }
+            jobs.joinAll()
         }
     }
 
@@ -246,7 +248,7 @@ suspend fun massiveRun(context: CoroutineContext, action: suspend () -> Unit) {
                 repeat(k) { action() }
             }
         }
-        jobs.forEach { it.join() }
+        jobs.joinAll()
     }
     println("Completed ${n * k} actions in $time ms")
 }
