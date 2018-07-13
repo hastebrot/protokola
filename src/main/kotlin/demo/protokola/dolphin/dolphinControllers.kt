@@ -29,8 +29,13 @@ open class FooController {
         model.stringProperty().onChanged { event ->
             println("--- string changed to '${event.newValue}' (from '${event.oldValue}').")
         }
-        model.getArray().onChanged { event ->
-            println("--- array changed with '${event.changes}.")
+
+        model.booleanProperty().onChanged { event ->
+            println("--- boolean changed to '${event.newValue}' (from '${event.oldValue}').")
+        }
+
+        model.listObservable().onChanged { event ->
+            println("--- list changed with '${event.changes}.")
         }
     }
 
