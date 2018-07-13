@@ -82,12 +82,12 @@ class FooClientApplication : DolphinPlatformApplication() {
     override fun onInitializationError(stage: Stage,
                                        exception: ClientInitializationException,
                                        possibleCauses: MutableIterable<DolphinRuntimeException>) {
-        println("init error: " + exception)
+        println("init error: $exception")
         Platform.exit()
     }
 
     override fun onShutdownError(exception: ClientShutdownException) {
-        println("shutdown error: " + exception)
+        println("shutdown error: $exception")
         Platform.exit()
     }
 }

@@ -10,6 +10,7 @@ object FooConstants {
 
 @DolphinBean
 class FooPropertyBean {
+
     private lateinit var stringProperty: Property<String?>
     fun stringProperty() = stringProperty
 
@@ -24,7 +25,7 @@ class FooPropertyBean {
         get() = booleanProperty.get()
         set(value) = booleanProperty.set(value)
 
-    private lateinit var array: ObservableList<FooPropertyBean?>
-    fun getArray() = array
+    private lateinit var listObservable: ObservableList<FooPropertyBean?>
+    fun listObservable() = listObservable
 
 }
