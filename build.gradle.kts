@@ -76,6 +76,7 @@ dependencies {
     testCompile(kotlin("test", kotlinVersion))
     testCompile(kotlin("test-junit5", kotlinVersion))
 
+    testCompile("io.kotlintest:kotlintest-runner-junit5:3.1.7")
     testCompile("com.winterbe:expekt:$expektVersion")
     testImplementation("com.rubylichtenstein:rxtest:$rxtestVersion")
 }
@@ -90,6 +91,19 @@ kotlin {
 }
 
 tasks {
+    withType<Wrapper> {
+        gradleVersion = gradleWrapperVersion
+        distributionType = Wrapper.DistributionType.ALL
+    }
+
+    withType<Test> {
+        useJUnitPlatform()
+
+        testLogging {
+            events("PASSED", "FAILED", "SKIPPED", "STANDARD_OUT", "STANDARD_ERROR")
+        }
+    }
+
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
@@ -102,10 +116,5 @@ tasks {
     "dokkaJavadoc"(DokkaTask::class) {
         outputFormat = "javadoc"
         outputDirectory = "$buildDir/javadoc"
-    }
-
-    "wrapper"(Wrapper::class) {
-        gradleVersion = gradleWrapperVersion
-        distributionType = Wrapper.DistributionType.ALL
     }
 }
